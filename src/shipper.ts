@@ -181,15 +181,5 @@ export abstract class ShipperClient {
     } catch (e) {
       return { err: e };
     }
-
-    // return request(opts, (err, response, body) => {
-    //   if (body == null || err != null) {
-    //     return cb(err);
-    //   }
-    //   if (response.statusCode !== 200) {
-    //     return cb(`response status ${response.statusCode}`);
-    //   }
-    //   return this.presentResponse(body, requestData);
-    // });
   }
 }
