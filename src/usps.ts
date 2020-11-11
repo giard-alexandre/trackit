@@ -27,13 +27,12 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import { Builder, Parser } from "xml2js";
-import { IShipperClientOptions, ShipperClient, STATUS_TYPES } from "./shipper";
-
-function __guard__(value, transform) {
-  return typeof value !== "undefined" && value !== null
-    ? transform(value)
-    : undefined;
-}
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
 
 interface IUspsClientOptions extends IShipperClientOptions {
   userId: string;
@@ -100,23 +99,31 @@ class UspsClient extends ShipperClient {
     });
   }
 
-  validateResponse(response, cb) {
-    function handleResponse(xmlErr, trackResult) {
-      const trackInfo = __guard__(
-        __guard__(
-          trackResult != null ? trackResult.TrackResponse : undefined,
-          (x1) => x1.TrackInfo
-        ),
-        (x) => x[0]
-      );
-      if (xmlErr != null || trackInfo == null) {
-        return cb(xmlErr);
-      }
-      return cb(null, trackInfo);
-    }
-
+  async validateResponse(response: any): Promise<IShipperResponse> {
     this.parser.reset();
-    return this.parser.parseString(response, handleResponse);
+    try {
+      const trackResult = await new Promise<any>((resolve, reject) => {
+        this.parser.parseString(response, (xmlErr, trackResult) => {
+          if (xmlErr) {
+            reject(xmlErr);
+          } else {
+            resolve(trackResult);
+          }
+        });
+      });
+
+      if (trackResult == null) {
+        return { err: new Error("TrackResult is empty") };
+      }
+
+      const trackInfo = trackResult?.TrackResponse?.TrackInfo?.[0];
+      if (trackInfo == null) {
+        return { err: new Error("No Tracking Info") };
+      }
+      return { shipment: trackInfo };
+    } catch (e) {
+      return { err: e };
+    }
   }
 
   getEta(shipment) {
@@ -190,22 +197,14 @@ class UspsClient extends ShipperClient {
   }
 
   getStatus(shipment) {
-    const statusCategory = __guard__(
-      shipment != null ? shipment.StatusCategory : undefined,
-      (x) => x[0]
-    );
+    const statusCategory = shipment?.StatusCategory?.[0];
     switch (statusCategory) {
       case "Pre-Shipment":
         return STATUS_TYPES.SHIPPING;
       case "Delivered":
         return STATUS_TYPES.DELIVERED;
       default:
-        return this.presentStatus(
-          __guard__(
-            shipment != null ? shipment.Status : undefined,
-            (x1) => x1[0]
-          )
-        );
+        return this.presentStatus(shipment?.Status?.[0]);
     }
   }
 
@@ -217,36 +216,16 @@ class UspsClient extends ShipperClient {
     let activity = null;
     const city =
       rawActivity.EventCity != null ? rawActivity.EventCity[0] : undefined;
-    if (
-      __guard__(
-        rawActivity.EventState != null ? rawActivity.EventState[0] : undefined,
-        (x) => x.length
-      )
-    ) {
-      stateCode =
-        rawActivity.EventState != null ? rawActivity.EventState[0] : undefined;
+    if (rawActivity?.EventState?.[0]?.length) {
+      stateCode = rawActivity?.EventState?.[0] || undefined;
     }
-    if (
-      __guard__(
-        rawActivity.EventZIPCode != null
-          ? rawActivity.EventZIPCode[0]
-          : undefined,
-        (x1) => x1.length
-      )
-    ) {
+    if (rawActivity?.EventZIPCode?.[0]?.length) {
       postalCode =
         rawActivity.EventZIPCode != null
           ? rawActivity.EventZIPCode[0]
           : undefined;
     }
-    if (
-      __guard__(
-        rawActivity.EventCountry != null
-          ? rawActivity.EventCountry[0]
-          : undefined,
-        (x2) => x2.length
-      )
-    ) {
+    if (rawActivity?.EventCountry?.[0]?.length) {
       countryCode =
         rawActivity.EventCountry != null
           ? rawActivity.EventCountry[0]
@@ -259,19 +238,10 @@ class UspsClient extends ShipperClient {
       postalCode,
     });
     const timestamp = this.presentTimestamp(
-      __guard__(
-        rawActivity != null ? rawActivity.EventDate : undefined,
-        (x3) => x3[0]
-      ),
-      __guard__(
-        rawActivity != null ? rawActivity.EventTime : undefined,
-        (x4) => x4[0]
-      )
+      rawActivity?.EventDate?.[0],
+      rawActivity?.EventTime?.[0]
     );
-    const details = __guard__(
-      rawActivity != null ? rawActivity.Event : undefined,
-      (x5) => x5[0]
-    );
+    const details = rawActivity?.Event?.[0];
     if (details != null && timestamp != null) {
       activity = { timestamp, location, details };
     }
@@ -280,12 +250,7 @@ class UspsClient extends ShipperClient {
 
   getActivitiesAndStatus(shipment) {
     const activities = [];
-    const trackSummary = this.presentActivity(
-      __guard__(
-        shipment != null ? shipment.TrackSummary : undefined,
-        (x) => x[0]
-      )
-    );
+    const trackSummary = this.presentActivity(shipment?.TrackSummary?.[0]);
     if (trackSummary != null) {
       activities.push(trackSummary);
     }

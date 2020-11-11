@@ -27,13 +27,12 @@ import moment from "moment-timezone";
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import { Parser } from "xml2js";
-import { IShipperClientOptions, ShipperClient, STATUS_TYPES } from "./shipper";
-
-function __guard__(value, transform) {
-  return typeof value !== "undefined" && value !== null
-    ? transform(value)
-    : undefined;
-}
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
 
 interface IDhlClientOptions extends IShipperClientOptions {
   userId: string;
@@ -120,39 +119,50 @@ class DhlClient extends ShipperClient {
 `;
   }
 
-  validateResponse(response, cb) {
-    function handleResponse(xmlErr, trackResult) {
-      if (xmlErr != null || trackResult == null) {
-        return cb(xmlErr);
+  async validateResponse(response: any): Promise<IShipperResponse> {
+    this.parser.reset();
+    try {
+      const trackResult = await new Promise<any>((resolve, reject) => {
+        this.parser.parseString(response, (xmlErr, trackResult) => {
+          if (xmlErr) {
+            reject(xmlErr);
+          } else {
+            resolve(trackResult);
+          }
+        });
+      });
+
+      if (trackResult == null) {
+        return { err: new Error("TrackResult is empty") };
       }
+
       const trackingResponse = trackResult["req:TrackingResponse"];
       if (trackingResponse == null) {
-        return cb({ error: "no tracking response" });
+        return { err: new Error("no tracking response") };
       }
       const awbInfo =
         trackingResponse.AWBInfo != null
           ? trackingResponse.AWBInfo[0]
           : undefined;
       if (awbInfo == null) {
-        return cb({ error: "no AWBInfo in response" });
+        return { err: new Error("no AWBInfo in response") };
       }
       const shipment =
         awbInfo.ShipmentInfo != null ? awbInfo.ShipmentInfo[0] : undefined;
       if (shipment == null) {
-        return cb({ error: "could not find shipment" });
+        return { err: new Error("could not find shipment") };
       }
       const trackStatus =
         awbInfo.Status != null ? awbInfo.Status[0] : undefined;
       const statusCode =
         trackStatus != null ? trackStatus.ActionStatus : undefined;
       if (statusCode.toString() !== "success") {
-        return cb({ error: `unexpected track status code=${statusCode}` });
+        return { err: new Error(`unexpected track status code=${statusCode}`) };
       }
-      return cb(null, shipment);
+      return { shipment: shipment };
+    } catch (e) {
+      return { err: e };
     }
-
-    this.parser.reset();
-    return this.parser.parseString(response, handleResponse);
   }
 
   getEta(shipment) {
@@ -241,15 +251,7 @@ class DhlClient extends ShipperClient {
     }
     rawActivities.reverse();
     for (const rawActivity of Array.from(rawActivities || [])) {
-      const rawLocation = __guard__(
-        __guard__(
-          rawActivity.ServiceArea != null
-            ? rawActivity.ServiceArea[0]
-            : undefined,
-          (x1) => x1.Description
-        ),
-        (x) => x[0]
-      );
+      const rawLocation = rawActivity?.ServiceArea?.[0]?.Description?.[0];
       const location = this.presentAddress(rawLocation);
       const timestamp = this.presentTimestamp(
         rawActivity.Date != null ? rawActivity.Date[0] : undefined,
@@ -257,15 +259,7 @@ class DhlClient extends ShipperClient {
       );
       let details = this.presentDetails(
         rawLocation,
-        __guard__(
-          __guard__(
-            rawActivity.ServiceEvent != null
-              ? rawActivity.ServiceEvent[0]
-              : undefined,
-            (x3) => x3.Description
-          ),
-          (x2) => x2[0]
-        )
+        rawActivity?.ServiceEvent?.[0]?.Description?.[0]
       );
       if (details != null && timestamp != null) {
         details =
@@ -277,15 +271,7 @@ class DhlClient extends ShipperClient {
       }
       if (!status) {
         status = this.presentStatus(
-          __guard__(
-            __guard__(
-              rawActivity.ServiceEvent != null
-                ? rawActivity.ServiceEvent[0]
-                : undefined,
-              (x5) => x5.EventCode
-            ),
-            (x4) => x4[0]
-          )
+          rawActivity?.ServiceEvent?.[0]?.EventCode?.[0]
         );
       }
     }
@@ -293,15 +279,7 @@ class DhlClient extends ShipperClient {
   }
 
   getDestination(shipment) {
-    const destination = __guard__(
-      __guard__(
-        shipment.DestinationServiceArea != null
-          ? shipment.DestinationServiceArea[0]
-          : undefined,
-        (x1) => x1.Description
-      ),
-      (x) => x[0]
-    );
+    const destination = shipment?.DestinationServiceArea?.[0]?.Description?.[0];
     if (destination == null) {
       return;
     }

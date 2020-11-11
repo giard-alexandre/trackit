@@ -28,13 +28,7 @@
  */
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import { ShipperClient, STATUS_TYPES } from "./shipper";
-
-function __guard__(value, transform) {
-  return typeof value !== "undefined" && value !== null
-    ? transform(value)
-    : undefined;
-}
+import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 class UpsMiClient extends ShipperClient {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
@@ -48,12 +42,19 @@ class UpsMiClient extends ShipperClient {
     ["sorted", STATUS_TYPES.EN_ROUTE],
   ]);
 
-  validateResponse(response, cb) {
+  validateResponse(response: any): Promise<IShipperResponse> {
     const $ = load(response, { normalizeWhitespace: true });
-    const summary = __guard__($("#Table6").find("table"), (x) => x[0]);
+    const summary = $("#Table6")?.find("table")?.[0];
     const uspsDetails = $("#ctl00_mainContent_ctl00_pnlUSPS > table");
     const miDetails = $("#ctl00_mainContent_ctl00_pnlMI > table");
-    return cb(null, { $, summary, uspsDetails, miDetails });
+    return Promise.resolve({
+      shipment: {
+        $,
+        summary,
+        uspsDetails,
+        miDetails,
+      },
+    });
   }
 
   extractSummaryField(data, name) {
@@ -70,10 +71,7 @@ class UpsMiClient extends ShipperClient {
           .each(function (cindex, col) {
             const regex = new RegExp(name);
             if (regex.test($(col).text())) {
-              value = __guard__(
-                __guard__($(col).next(), (x1) => x1.text()),
-                (x) => x.trim()
-              );
+              value = $(col)?.next()?.text()?.trim();
             }
             if (value != null) {
               return false;
@@ -148,10 +146,7 @@ class UpsMiClient extends ShipperClient {
         $(row)
           .children("td")
           .each((cindex, col) => {
-            const value = __guard__(
-              __guard__($(col), (x1) => x1.text()),
-              (x) => x.trim()
-            );
+            const value = $(col)?.text()?.trim();
             switch (cindex) {
               case 0:
                 return (timestamp = this.extractTimestamp(value));

@@ -27,13 +27,7 @@ import { lowerCase, titleCase, upperCaseFirst } from "change-case";
  */
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import { ShipperClient, STATUS_TYPES } from "./shipper";
-
-function __guard__(value, transform) {
-  return typeof value !== "undefined" && value !== null
-    ? transform(value)
-    : undefined;
-}
+import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 const LOCATION_STATES = {
   Ontario: "CA",
@@ -79,9 +73,9 @@ class OnTracClient extends ShipperClient {
     ["DATA ENTRY", STATUS_TYPES.SHIPPING],
   ]);
 
-  validateResponse(response, cb) {
+  async validateResponse(response: any): Promise<IShipperResponse> {
     const data = load(response, { normalizeWhitespace: true });
-    return cb(null, data);
+    return Promise.resolve({ shipment: data });
   }
 
   extractSummaryField(shipment, name) {
@@ -95,10 +89,7 @@ class OnTracClient extends ShipperClient {
       if (!regex.test($(element).text())) {
         return;
       }
-      value = __guard__(
-        __guard__($(element).next(), (x1) => x1.text()),
-        (x) => x.trim()
-      );
+      value = $(element)?.next()?.text()?.trim();
       return false;
     });
 
@@ -139,10 +130,7 @@ class OnTracClient extends ShipperClient {
   }
 
   presentStatus(status) {
-    status = __guard__(
-      status != null ? status.replace("DETAILS", "") : undefined,
-      (x) => x.trim()
-    );
+    status = status?.replace("DETAILS", "")?.trim();
     if (!(status != null ? status.length : undefined)) {
       return STATUS_TYPES.UNKNOWN;
     }

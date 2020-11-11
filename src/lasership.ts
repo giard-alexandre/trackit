@@ -26,13 +26,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import moment from "moment-timezone";
-import { ShipperClient, STATUS_TYPES } from "./shipper";
-
-function __guard__(value, transform) {
-  return typeof value !== "undefined" && value !== null
-    ? transform(value)
-    : undefined;
-}
+import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 class LasershipClient extends ShipperClient {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
@@ -45,15 +39,15 @@ class LasershipClient extends ShipperClient {
     ["OrderCreated", STATUS_TYPES.SHIPPING],
   ]);
 
-  validateResponse(response, cb) {
+  validateResponse(response: any): Promise<IShipperResponse> {
     try {
       response = JSON.parse(response);
       if (response.Events == null) {
-        return cb({ error: "missing events" });
+        return Promise.resolve({ err: new Error("missing events") });
       }
-      return cb(null, response);
+      return Promise.resolve({ shipment: response });
     } catch (error) {
-      return cb(error);
+      return Promise.resolve({ err: error });
     }
   }
 
@@ -117,12 +111,7 @@ class LasershipClient extends ShipperClient {
   }
 
   getWeight(shipment) {
-    if (
-      !__guard__(
-        shipment != null ? shipment.Pieces : undefined,
-        (x) => x.length
-      )
-    ) {
+    if (!shipment?.Pieces?.length) {
       return;
     }
     const piece = shipment.Pieces[0];
