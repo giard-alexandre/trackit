@@ -173,8 +173,8 @@ export abstract class ShipperClient {
       if (body == null) {
         return { err: new Error("Empty response") };
       }
-      if (response.statusCode !== 200) {
-        return { err: new Error(`response status ${response.statusCode}`) };
+      if (response.status !== 200) {
+        return { err: new Error(`response status ${response.status}`) };
       }
       const presentedResponse = await this.presentResponse(body, requestData);
       return { data: presentedResponse };
