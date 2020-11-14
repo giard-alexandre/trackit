@@ -23,8 +23,14 @@ import * as fs from "fs";
 import { A1Client } from "../src/a1";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("a1 client", () => {
-  let _a1Client = null;
+  let _a1Client: A1Client;
 
   beforeAll(() => (_a1Client = new A1Client({})));
 
@@ -33,15 +39,16 @@ describe("a1 client", () => {
       let _package = null;
 
       beforeAll((done) =>
-        fs.readFile("test/stub_data/a1_shipping.xml", "utf8", (err, xmlDoc) =>
+        fs.readFile("test/stub_data/a1_shipping.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
           _a1Client
-            .presentResponse(xmlDoc, "trk")
+            .presentResponse(xmlDoc)
             .then(({ err, presentedResponse }) => {
               expect(err).toBeFalsy();
               _package = presentedResponse;
               return done();
-            })
-        )
+            }, handleError);
+        })
       );
 
       it("has a status of en-route", () =>
@@ -70,14 +77,19 @@ describe("a1 client", () => {
       let _package = null;
 
       beforeAll((done) =>
-        fs.readFile("test/stub_data/a1_delivered.xml", "utf8", (err, xmlDoc) =>
-          _a1Client
-            .presentResponse(xmlDoc, "trk")
-            .then(({ err, presentedResponse }) => {
-              expect(err).toBeFalsy();
-              _package = presentedResponse;
-              return done();
-            })
+        fs.readFile(
+          "test/stub_data/a1_delivered.xml",
+          "utf8",
+          (err, xmlDoc) => {
+            expect(err).toBeFalsy();
+            _a1Client
+              .presentResponse(xmlDoc)
+              .then(({ err, presentedResponse }) => {
+                expect(err).toBeFalsy();
+                _package = presentedResponse;
+                return done();
+              }, handleError);
+          }
         )
       );
 
@@ -106,15 +118,16 @@ describe("a1 client", () => {
       let _err = null;
 
       beforeAll((done) =>
-        fs.readFile("test/stub_data/a1_error.xml", "utf8", (err, xmlDoc) =>
+        fs.readFile("test/stub_data/a1_error.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
           _a1Client
-            .presentResponse(xmlDoc, "trk")
+            .presentResponse(xmlDoc)
             .then(({ err, presentedResponse }) => {
               _package = presentedResponse;
               _err = err;
               return done();
-            })
-        )
+            }, handleError);
+        })
       );
 
       it("complains about an invalid tracking number", () =>

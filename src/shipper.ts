@@ -1,14 +1,3 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { titleCase } from "change-case";
 import { endOfDay, startOfDay } from "date-fns";
 import fetch, { RequestInfo, RequestInit } from "node-fetch";
@@ -155,7 +144,7 @@ export abstract class ShipperClient<
 
   public async presentResponse(
     response: string,
-    requestData: TRequestOptions
+    requestData?: TRequestOptions
   ): Promise<{ err?: Error; presentedResponse?: any }> {
     const { err, shipment } = await this.validateResponse(response);
     let adjustedEta: Date;

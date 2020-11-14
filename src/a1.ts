@@ -7,6 +7,7 @@
 	node/no-callback-literal
 */
 import moment from "moment-timezone";
+import { RequestInfo, RequestInit } from "node-fetch";
 // TODO: This file was created by bulk-decaffeinate.
 // Fix any style issues and re-enable lint.
 /*
@@ -22,7 +23,15 @@ import {
   STATUS_TYPES,
 } from "./shipper";
 
-class A1Client extends ShipperClient {
+interface IA1Shipment {
+  test: string;
+}
+
+interface IA1RequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
+
+class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["101", STATUS_TYPES.EN_ROUTE],
     ["102", STATUS_TYPES.EN_ROUTE],
@@ -40,7 +49,7 @@ class A1Client extends ShipperClient {
     this.parser = new Parser();
   }
 
-  async validateResponse(response): Promise<IShipperResponse> {
+  async validateResponse(response): Promise<IShipperResponse<IA1Shipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<any>((resolve, reject) => {
@@ -161,10 +170,15 @@ class A1Client extends ShipperClient {
     return this.presentAddress(shipment?.PackageDestinationLocation?.[0]);
   }
 
-  requestOptions({ trackingNumber }) {
+  public requestOptions(
+    options: IA1RequestOptions
+  ): { req: RequestInfo; opts: RequestInit } {
+    const { trackingNumber } = options;
     return {
-      method: "GET",
-      uri: `http://www.aoneonline.com/pages/customers/trackingrequest.php?tracking_number=${trackingNumber}`,
+      req: `http://www.aoneonline.com/pages/customers/trackingrequest.php?tracking_number=${trackingNumber}`,
+      opts: {
+        method: "GET",
+      },
     };
   }
 }
