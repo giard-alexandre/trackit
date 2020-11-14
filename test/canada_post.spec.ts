@@ -23,6 +23,12 @@ import fs from "fs";
 import { CanadaPostClient } from "../src/canada_post";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("canada post client", () => {
   let _canpostClient = null;
 

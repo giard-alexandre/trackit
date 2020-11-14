@@ -25,6 +25,12 @@ import { Parser } from "xml2js";
 import { STATUS_TYPES } from "../src/shipper";
 import { UspsClient } from "../src/usps";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("usps client", () => {
   let _uspsClient = null;
   const _xmlParser = new Parser();

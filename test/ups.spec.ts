@@ -29,6 +29,12 @@ import { Parser } from "xml2js";
 import { STATUS_TYPES } from "../src/shipper";
 import { UpsClient } from "../src/ups";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("ups client", () => {
   let _upsClient: UpsClient;
   const _xmlParser = new Parser();
@@ -313,9 +319,7 @@ describe("ups client", () => {
     });
 
     it("returns an empty array and null status if no package activities are found", () => {
-      const { activities, status } = _upsClient.getActivitiesAndStatus(
-	      {}
-      );
+      const { activities, status } = _upsClient.getActivitiesAndStatus({});
       expect(activities).toBeInstanceOf(Array);
       expect(activities).toHaveLength(0);
       expect(status).toBeNull();

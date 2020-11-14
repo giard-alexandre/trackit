@@ -25,6 +25,12 @@ import moment from "moment-timezone";
 import { AmazonClient } from "../src/amazon";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("amazon client", () => {
   let _amazonClient = null;
 

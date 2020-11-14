@@ -26,6 +26,12 @@ import { Parser } from "xml2js";
 import { FedexClient } from "../src/fedex";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("fedex client", () => {
   let _fedexClient: FedexClient = null;
   const _xmlParser = new Parser();

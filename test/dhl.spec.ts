@@ -23,6 +23,12 @@ import fs from "fs";
 import { DhlClient } from "../src/dhl";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("dhl client", () => {
   let _dhlClient = null;
 

@@ -23,6 +23,12 @@ import fs from "fs";
 import { PrestigeClient } from "../src/prestige";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("prestige client", () => {
   let _presClient = null;
 

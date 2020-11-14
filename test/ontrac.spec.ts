@@ -22,6 +22,12 @@ import fs from "fs";
 import { OnTracClient } from "../src/ontrac";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("on trac client", () => {
   let _onTracClient = null;
 

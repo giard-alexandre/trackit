@@ -23,6 +23,12 @@ import fs from "fs";
 import { DhlGmClient } from "../src/dhlgm";
 import { STATUS_TYPES } from "../src/shipper";
 
+const handleError = (e: any) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
+
 describe("DHL Global Mail client", () => {
   let _dhlgmClient = null;
 
