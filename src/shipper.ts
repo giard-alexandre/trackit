@@ -53,27 +53,31 @@ export interface IActivity {
 }
 
 /**
- * @param T The type of the shipment activity
+ * @param TShipment The type of the shipment activity
+ * @param TRequestOptions The structure of the request options used to build the request to the carrier.
  */
-export abstract class ShipperClient<T> {
+export abstract class ShipperClient<
+  TShipment,
+  TRequestOptions extends IShipperClientOptions
+> {
   public abstract async validateResponse(
-    response: any
-  ): Promise<IShipperResponse<T>>;
+    response: string
+  ): Promise<IShipperResponse<TShipment>>;
 
   public abstract getActivitiesAndStatus(
-    shipment: T
+    shipment: TShipment
   ): { activities: Array<IActivity>; status: STATUS_TYPES };
 
-  public abstract getEta(shipment: T): Date;
+  public abstract getEta(shipment: TShipment): Date;
 
-  public abstract getService(shipment: T): string;
+  public abstract getService(shipment: TShipment): string;
 
-  public abstract getWeight(shipment: T): string;
+  public abstract getWeight(shipment: TShipment): string;
 
-  public abstract getDestination(shipment: T): string;
+  public abstract getDestination(shipment: TShipment): string;
 
-  public abstract requestOptions<U extends IShipperClientOptions>(
-    options: U
+  public abstract requestOptions(
+    options: TRequestOptions
   ): { req: RequestInfo; opts: RequestInit };
 
   public options: IShipperClientOptions = { timeout: 2000 };
@@ -149,9 +153,9 @@ export abstract class ShipperClient<T> {
     return address;
   }
 
-  public async presentResponse<U extends IShipperClientOptions>(
+  public async presentResponse(
     response: string,
-    requestData: U
+    requestData: TRequestOptions
   ): Promise<{ err?: Error; presentedResponse?: any }> {
     const { err, shipment } = await this.validateResponse(response);
     let adjustedEta: Date;
@@ -183,8 +187,8 @@ export abstract class ShipperClient<T> {
     return { err: null, presentedResponse: presentedResponse };
   }
 
-  public async requestData<U extends IShipperClientOptions>(
-    requestData: U
+  public async requestData(
+    requestData: TRequestOptions
   ): Promise<{ err?: Error; data?: any }> {
     const { req, opts } = this.requestOptions(requestData);
     opts.timeout = requestData?.timeout || this.options?.timeout;
