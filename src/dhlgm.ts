@@ -54,21 +54,20 @@ class DhlGmClient extends ShipperClient {
         shipment: load(response, { normalizeWhitespace: true }),
       });
     } catch (error) {
-      // TODO: Reject
       return Promise.resolve({ err: error });
     }
   }
 
-  extractSummaryField(data, name) {
+  extractSummaryField(data, name): string {
     if (data == null) {
       return;
     }
     const $ = data;
-    let value;
+    let value: string;
     const regex = new RegExp(name);
     $(".card-info > dl")
       .children()
-      .each(function (findex, field) {
+      .each((findex, field) => {
         if (regex.test($(field).text())) {
           value = $(field)?.next()?.text()?.trim();
         }

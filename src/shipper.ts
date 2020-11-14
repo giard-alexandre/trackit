@@ -1,10 +1,6 @@
 /* eslint-disable
 	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
+	@typescript-eslint/no-unsafe-member-access
 */
 // TODO: This file was created by bulk-decaffeinate.
 // Fix any style issues and re-enable lint.
@@ -15,7 +11,7 @@
  */
 import { titleCase } from "change-case";
 import { endOfDay, startOfDay } from "date-fns";
-import fetch from "node-fetch";
+import fetch, { RequestInfo, RequestInit } from "node-fetch";
 
 export enum STATUS_TYPES {
   UNKNOWN = 0,
@@ -38,29 +34,48 @@ export interface IShipperClientOptions {
   timeout?: number;
 }
 
-export interface IShipperResponse {
+export interface IShipperResponse<T> {
   err?: Error;
-  shipment?: any;
+  shipment?: T;
 }
 
-export abstract class ShipperClient {
+export interface ILocation {
+  city: string;
+  stateCode: string;
+  countryCode: string;
+  postalCode: string;
+}
+
+export interface IActivity {
+  timestamp: Date;
+  location: string;
+  details: string;
+}
+
+/**
+ * @param T The type of the shipment activity
+ */
+export abstract class ShipperClient<T> {
   public abstract async validateResponse(
     response: any
-  ): Promise<IShipperResponse>;
+  ): Promise<IShipperResponse<T>>;
 
-  public abstract getActivitiesAndStatus(shipment: any): any;
+  public abstract getActivitiesAndStatus(
+    shipment: T
+  ): { activities: Array<IActivity>; status: STATUS_TYPES };
 
-  public abstract getEta(shipment: any): Date;
+  public abstract getEta(shipment: T): Date;
 
-  public abstract getService(shipment: any): any;
+  public abstract getService(shipment: T): string;
 
-  public abstract getWeight(shipment: any): any;
+  public abstract getWeight(shipment: T): string;
 
-  public abstract getDestination(shipment: any): any;
+  public abstract getDestination(shipment: T): string;
 
-  public abstract requestOptions(options: any): any;
+  public abstract requestOptions<U extends IShipperClientOptions>(
+    options: U
+  ): { req: RequestInfo; opts: RequestInit };
 
-  // TODO: Convert to a typed abstract object class?
   public options: IShipperClientOptions = { timeout: 2000 };
 
   constructor(options?: IShipperClientOptions) {
@@ -92,7 +107,12 @@ export abstract class ShipperClient {
     return newFields.join(", ");
   }
 
-  public presentLocation({ city, stateCode, countryCode, postalCode }): string {
+  public presentLocation({
+    city,
+    stateCode,
+    countryCode,
+    postalCode,
+  }: ILocation): string {
     let address: string;
     if (city?.length) {
       city = titleCase(city);
@@ -129,9 +149,9 @@ export abstract class ShipperClient {
     return address;
   }
 
-  public async presentResponse(
-    response,
-    requestData
+  public async presentResponse<U extends IShipperClientOptions>(
+    response: string,
+    requestData: U
   ): Promise<{ err?: Error; presentedResponse?: any }> {
     const { err, shipment } = await this.validateResponse(response);
     let adjustedEta: Date;
@@ -161,15 +181,16 @@ export abstract class ShipperClient {
     }
     presentedResponse.request = requestData;
     return { err: null, presentedResponse: presentedResponse };
-    // return cb(null, presentedResponse);
   }
 
-  public async requestData(requestData): Promise<{ err?: Error; data?: any }> {
-    const opts = this.requestOptions(requestData);
+  public async requestData<U extends IShipperClientOptions>(
+    requestData: U
+  ): Promise<{ err?: Error; data?: any }> {
+    const { req, opts } = this.requestOptions(requestData);
     opts.timeout = requestData?.timeout || this.options?.timeout;
     try {
-      const response = await fetch(opts);
-      const body = response.body;
+      const response = await fetch(req, opts);
+      const body = await response.text();
       if (body == null) {
         return { err: new Error("Empty response") };
       }
@@ -179,7 +200,7 @@ export abstract class ShipperClient {
       const presentedResponse = await this.presentResponse(body, requestData);
       return { data: presentedResponse };
     } catch (e) {
-      return { err: e };
+      return { err: e as Error };
     }
   }
 }
