@@ -24,6 +24,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
 import { RequestInfo, RequestInit } from "node-fetch";
@@ -217,24 +218,19 @@ class AmazonClient extends ShipperClient<
     return { activities, status };
   }
 
-  public requestOptions(
-    options: IAmazonRequestOptions
-  ): { req: RequestInfo; opts: RequestInit } {
+  public requestOptions(options: IAmazonRequestOptions): AxiosRequestConfig {
     const { orderID, orderingShipmentId } = options;
     return {
-      req:
+      url:
         "https://www.amazon.com/gp/css/shiptrack/view.html" +
         "/ref=pe_385040_121528360_TE_SIMP_typ?ie=UTF8" +
         `&orderID=${orderID}` +
         `&orderingShipmentId=${orderingShipmentId}` +
         "&packageId=1",
-      opts: {
-        method: "GET",
-        compress: true,
-        headers: {
-          accept: "text/html",
-          "accept-encoding": "gzip",
-        },
+      method: "GET",
+      headers: {
+        accept: "text/html",
+        "accept-encoding": "gzip",
       },
     };
   }

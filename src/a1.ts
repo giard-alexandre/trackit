@@ -6,6 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { RequestInfo, RequestInit } from "node-fetch";
 // TODO: This file was created by bulk-decaffeinate.
@@ -170,15 +171,11 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     return this.presentAddress(shipment?.PackageDestinationLocation?.[0]);
   }
 
-  public requestOptions(
-    options: IA1RequestOptions
-  ): { req: RequestInfo; opts: RequestInit } {
+  public requestOptions(options: IA1RequestOptions): AxiosRequestConfig {
     const { trackingNumber } = options;
     return {
-      req: `http://www.aoneonline.com/pages/customers/trackingrequest.php?tracking_number=${trackingNumber}`,
-      opts: {
-        method: "GET",
-      },
+      url: `http://www.aoneonline.com/pages/customers/trackingrequest.php?tracking_number=${trackingNumber}`,
+      method: "GET",
     };
   }
 }
