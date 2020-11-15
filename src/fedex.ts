@@ -6,6 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { find } from "underscore";
 import { Builder, Parser } from "xml2js";
@@ -23,7 +24,18 @@ interface IFedexClientOptions extends IShipperClientOptions {
   meter: string;
 }
 
-export class FedexClient extends ShipperClient {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IFedexShipment {}
+
+interface IFedexRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+  reference: string;
+}
+
+export class FedexClient extends ShipperClient<
+  IFedexShipment,
+  IFedexRequestOptions
+> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["AA", STATUS_TYPES.EN_ROUTE],
     ["AD", STATUS_TYPES.EN_ROUTE],
@@ -128,7 +140,9 @@ export class FedexClient extends ShipperClient {
     });
   }
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<IFedexShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<any>((resolve, reject) => {
@@ -253,11 +267,14 @@ export class FedexClient extends ShipperClient {
     );
   }
 
-  requestOptions({ trackingNumber, reference }) {
+  requestOptions({
+    trackingNumber,
+    reference,
+  }: IFedexRequestOptions): AxiosRequestConfig {
     return {
       method: "POST",
-      uri: "https://ws.fedex.com/xml",
-      body: this.generateRequest(trackingNumber, reference),
+      url: "https://ws.fedex.com/xml",
+      data: this.generateRequest(trackingNumber, reference),
     };
   }
 }

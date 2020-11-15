@@ -57,6 +57,7 @@ describe("fedex client", () => {
           "eloquent shipit"
         );
         return _xmlParser.parseString(trackXml, function (err, data) {
+          handleError(err);
           _trackRequest = data?.["ns:TrackRequest"];
           assert(_trackRequest != null);
           return resolve();
@@ -209,14 +210,16 @@ describe("fedex client", () => {
           fs.readFile(
             "test/stub_data/fedex_delivered.xml",
             "utf8",
-            (err, xmlDoc) =>
+            (err, xmlDoc) => {
+              handleError(err);
               _fedexClient
-                .presentResponse(xmlDoc, "trk")
+                .presentResponse(xmlDoc)
                 .then(({ err, presentedResponse: resp }) => {
                   expect(err).toBeFalsy();
                   _package = resp;
                   resolve();
-                })
+                }, handleError);
+            }
           );
         });
         return promise;
@@ -258,14 +261,16 @@ describe("fedex client", () => {
           fs.readFile(
             "test/stub_data/fedex_missing_location.xml",
             "utf8",
-            (err, xmlDoc) =>
+            (err, xmlDoc) => {
+              handleError(err);
               _fedexClient
-                .presentResponse(xmlDoc, "trk")
+                .presentResponse(xmlDoc)
                 .then(({ err, presentedResponse: resp }) => {
                   expect(err).toBeFalsy();
                   _package = resp;
                   return resolve();
-                })
+                }, handleError);
+            }
           );
         });
         return promise;
