@@ -1,15 +1,13 @@
 /* eslint-disable
 	@typescript-eslint/restrict-template-expressions,
 	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
+	@typescript-eslint/no-unsafe-assignment
 */
 // TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { convertableToString, Parser } from "xml2js";
+import { type } from "os";
+import { Parser } from "xml2js";
 import {
   IActivity,
   IShipperClientOptions,
@@ -28,6 +26,9 @@ interface IA1Address {
 interface ITrackingEventDetail {
   EventCode: string[];
   EstimatedDeliveryDate: string[];
+  EventLocation: IA1Address[];
+  EventDateTime: string[];
+  EventCodeDesc: string[];
 }
 interface ITrackingEventHistory {
   TrackingEventDetail: ITrackingEventDetail[];
@@ -140,12 +141,11 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
   ): { activities: Array<IActivity>; status: STATUS_TYPES } {
     const activities: Array<IActivity> = [];
     const status = this.getStatus(shipment);
-    let rawActivities: any[] =
+    let rawActivities: ITrackingEventDetail[] =
       shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail;
     rawActivities = rawActivities ?? [];
-    // TODO: Type all this raw stuff.
     for (const rawActivity of rawActivities) {
-      let datetime: Date, timestamp: Date;
+      let datetime: string, timestamp: Date;
       const location = this.presentAddress(rawActivity?.EventLocation?.[0]);
       const rawTimestamp = rawActivity?.EventDateTime?.[0];
       if (rawTimestamp != null) {

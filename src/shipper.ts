@@ -37,7 +37,7 @@ export interface ILocation {
 
 export interface IActivity {
   timestamp?: Date;
-  datetime?: Date;
+  datetime?: string;
   location?: string;
   details?: string;
 }
