@@ -1,12 +1,10 @@
 /* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
 	@typescript-eslint/no-unsafe-member-access,
 	@typescript-eslint/no-unsafe-assignment
 */
 // TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { type } from "os";
 import { Parser } from "xml2js";
 import {
   IActivity,
