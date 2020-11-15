@@ -22,7 +22,7 @@ module.exports = {
         "@typescript-eslint"
     ],
     rules: {
-        // Fix these
+        // TODO: Fix these
         "no-void": "warn",
         "prefer-const" : "warn",
         // End fixes

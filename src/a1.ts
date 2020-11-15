@@ -54,8 +54,6 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
 
   constructor(options: IShipperClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
   }
 
