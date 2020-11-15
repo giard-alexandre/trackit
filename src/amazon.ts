@@ -45,10 +45,6 @@ interface IAmazonRequestOptions extends IShipperClientOptions {
   orderingShipmentId: string;
 }
 
-function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-}
-
 class AmazonClient extends ShipperClient<
   IAmazonShipment,
   IAmazonRequestOptions

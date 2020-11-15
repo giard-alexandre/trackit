@@ -1,16 +1,8 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: Fix any style issues and re-enable lint.
 import { Parser } from "xml2js";
 import {
+  IActivity,
   IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
@@ -23,13 +15,30 @@ interface ICanadaPostClientOptions extends IShipperClientOptions {
   password: string;
 }
 
-interface ICanadaPostShipment {
-  $: cheerio.Root;
-  response: any;
-}
-
 interface ICanadaPostRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
+}
+
+interface ICanadaPostEvent {
+  "event-site": string[];
+  "event-province": string[];
+  "event-date": string[];
+  "event-time": string[];
+  "event-description": string[];
+}
+
+interface ICanadaPostShipment {
+  "significant-events": {
+    occurrence: ICanadaPostEvent[];
+  }[];
+  "changed-expected-date": string[];
+  "expected-delivery-date": string[];
+  "service-name": string[];
+  "destination-postal-id": string[];
+}
+
+interface ICanadaPostResponse {
+  "tracking-detail": ICanadaPostShipment;
 }
 
 class CanadaPostClient extends ShipperClient<
@@ -66,25 +75,25 @@ class CanadaPostClient extends ShipperClient<
 
   constructor(options: ICanadaPostClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
   }
 
   async validateResponse(
-    response: any
+    response: string
   ): Promise<IShipperResponse<ICanadaPostShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
-        this.parser.parseString(response, (xmlErr, trackResult) => {
-          if (xmlErr) {
-            reject(xmlErr);
-          } else {
-            resolve(trackResult);
-          }
-        });
-      });
+      const trackResult = await new Promise<ICanadaPostResponse>(
+        (resolve, reject) => {
+          this.parser.parseString(response, (xmlErr, trackResult) => {
+            if (xmlErr) {
+              reject(xmlErr);
+            } else {
+              resolve(trackResult);
+            }
+          });
+        }
+      );
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
@@ -95,11 +104,11 @@ class CanadaPostClient extends ShipperClient<
       }
       return { shipment: details };
     } catch (e) {
-      return { err: e };
+      return { err: new Error(e) };
     }
   }
 
-  findStatusFromMap(statusText): STATUS_TYPES {
+  findStatusFromMap(statusText: string): STATUS_TYPES {
     let status = STATUS_TYPES.UNKNOWN;
     if (statusText && statusText.length > 0) {
       for (const [key, value] of this.STATUS_MAP) {
@@ -112,14 +121,14 @@ class CanadaPostClient extends ShipperClient<
     return status;
   }
 
-  getStatus(lastEvent): STATUS_TYPES {
+  getStatus(lastEvent: IActivity): STATUS_TYPES {
     return this.findStatusFromMap(
       lastEvent != null ? lastEvent.details : undefined
     );
   }
 
   getActivitiesAndStatus(shipment: ICanadaPostShipment): IShipmentActivities {
-    const activities = [];
+    const activities: IActivity[] = [];
     const events = shipment?.["significant-events"]?.[0]?.occurrence;
     for (const event of events || []) {
       const city =
@@ -143,7 +152,11 @@ class CanadaPostClient extends ShipperClient<
           ? event["event-description"][0]
           : undefined;
       if (details != null && timestamp != null) {
-        const activity = { timestamp, location, details };
+        const activity: IActivity = {
+          timestamp,
+          location,
+          details: details,
+        };
         activities.push(activity);
       }
     }
@@ -153,7 +166,7 @@ class CanadaPostClient extends ShipperClient<
     };
   }
 
-  getEta(shipment) {
+  getEta(shipment: ICanadaPostShipment): Date {
     const ts =
       (shipment["changed-expected-date"] != null
         ? shipment["changed-expected-date"][0]
@@ -169,17 +182,17 @@ class CanadaPostClient extends ShipperClient<
     }
   }
 
-  getService(shipment) {
+  getService(shipment: ICanadaPostShipment): string {
     return shipment["service-name"] != null
       ? shipment["service-name"][0]
       : undefined;
   }
 
-  getWeight() {
+  getWeight(): undefined {
     return undefined;
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: ICanadaPostShipment): string {
     return shipment["destination-postal-id"] != null
       ? shipment["destination-postal-id"][0]
       : undefined;
