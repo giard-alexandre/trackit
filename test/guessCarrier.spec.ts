@@ -19,12 +19,6 @@
  */
 import guessCarrier from "../src/guessCarrier";
 
-const handleError = (e: any) => {
-  if (e) {
-    throw new Error("This should never have been reached");
-  }
-};
-
 describe("carrier guesser", () => {
   describe("for amazon shipments", () => {
     it("detects an amazon order id + shipment id combo", () =>
