@@ -29,7 +29,7 @@ const handleError = (e: any) => {
 };
 
 describe("on trac client", () => {
-  let _onTracClient = null;
+  let _onTracClient: OnTracClient;
 
   beforeAll(() => (_onTracClient = new OnTracClient({})));
 
@@ -41,14 +41,16 @@ describe("on trac client", () => {
         fs.readFile(
           "test/stub_data/ontrac_intransit_details.html",
           "utf8",
-          (e, r) =>
+          (e, r) => {
+            handleError(e);
             _onTracClient
-              .presentResponse(r, "trk")
+              .presentResponse(r)
               .then(({ err, presentedResponse: resp }) => {
                 expect(err).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 

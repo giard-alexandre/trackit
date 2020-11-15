@@ -6,6 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 /* eslint-disable
     constructor-super,
@@ -27,7 +28,12 @@ import { lowerCase, titleCase, upperCaseFirst } from "change-case";
  */
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
 
 const LOCATION_STATES = {
   Ontario: "CA",
@@ -64,7 +70,17 @@ const LOCATION_STATES = {
   Seattle: "WA",
 };
 
-class OnTracClient extends ShipperClient {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IOnTracShipment {}
+
+interface IOnTracRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
+
+class OnTracClient extends ShipperClient<
+  IOnTracShipment,
+  IOnTracRequestOptions
+> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["DELIVERED", STATUS_TYPES.DELIVERED],
     ["OUT FOR DELIVERY", STATUS_TYPES.OUT_FOR_DELIVERY],
@@ -73,7 +89,9 @@ class OnTracClient extends ShipperClient {
     ["DATA ENTRY", STATUS_TYPES.SHIPPING],
   ]);
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<IOnTracShipment>> {
     const data = load(response, { normalizeWhitespace: true });
     return Promise.resolve({ shipment: data });
   }
@@ -186,15 +204,17 @@ class OnTracClient extends ShipperClient {
     return { activities, status };
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IOnTracShipment): string {
     const destination = this.extractSummaryField(shipment, "Deliver To");
     return this.presentLocationString(destination);
   }
 
-  requestOptions({ trackingNumber }) {
+  requestOptions({
+    trackingNumber,
+  }: IOnTracRequestOptions): AxiosRequestConfig {
     return {
       method: "GET",
-      uri: `https://www.ontrac.com/trackingdetail.asp?tracking=${trackingNumber}&run=0`,
+      url: `https://www.ontrac.com/trackingdetail.asp?tracking=${trackingNumber}&run=0`,
     };
   }
 }
