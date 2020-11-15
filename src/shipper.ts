@@ -1,6 +1,6 @@
 import { titleCase } from "change-case";
 import { endOfDay, startOfDay } from "date-fns";
-import fetch, { RequestInfo, RequestInit } from "node-fetch";
+import Axios, { AxiosRequestConfig } from "axios";
 
 export enum STATUS_TYPES {
   UNKNOWN = 0,
@@ -65,9 +65,7 @@ export abstract class ShipperClient<
 
   public abstract getDestination(shipment: TShipment): string;
 
-  public abstract requestOptions(
-    options: TRequestOptions
-  ): { req: RequestInfo; opts: RequestInit };
+  public abstract requestOptions(options: TRequestOptions): AxiosRequestConfig;
 
   public options: IShipperClientOptions = { timeout: 2000 };
 
@@ -179,11 +177,12 @@ export abstract class ShipperClient<
   public async requestData(
     requestData: TRequestOptions
   ): Promise<{ err?: Error; data?: any }> {
-    const { req, opts } = this.requestOptions(requestData);
-    opts.timeout = requestData?.timeout || this.options?.timeout;
+    const req = this.requestOptions(requestData);
+    req.responseType = "text";
+    req.timeout = requestData?.timeout || this.options?.timeout;
     try {
-      const response = await fetch(req, opts);
-      const body = await response.text();
+      const response = await Axios(req);
+      const body = (await response.data) as string;
       if (body == null) {
         return { err: new Error("Empty response") };
       }

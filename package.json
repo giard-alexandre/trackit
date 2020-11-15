@@ -13,12 +13,12 @@
     "build": "tsc"
   },
   "dependencies": {
+    "axios": "^0.21.0",
     "change-case": "3.0.x",
     "cheerio": "0.22.x",
     "date-fns": "^2.16.1",
     "date-fns-tz": "^1.0.12",
     "moment-timezone": "0.5.x",
-    "node-fetch": "^2.6.1",
     "underscore": "1.9.x",
     "xml2js": "0.4.x"
   },
