@@ -6,25 +6,36 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+// TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { Parser } from "xml2js";
 import {
+  IActivity,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
   STATUS_TYPES,
 } from "./shipper";
 
+interface IA1Address {
+  City: string[];
+  StateProvince: string[];
+  CountryCode: string[];
+  PostalCode: string[];
+}
+
+interface ITrackingEventDetail {
+  EventCode: string[];
+  EstimatedDeliveryDate: string[];
+}
+interface ITrackingEventHistory {
+  TrackingEventDetail: ITrackingEventDetail[];
+}
+
 interface IA1Shipment {
-  test: string;
+  TrackingEventHistory: ITrackingEventHistory[];
+  PackageDestinationLocation: IA1Address[];
 }
 
 interface IA1RequestOptions extends IShipperClientOptions {
@@ -83,7 +94,7 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     }
   }
 
-  presentAddress(address) {
+  presentAddress(address: IA1Address): string {
     if (address == null) {
       return;
     }
@@ -99,14 +110,15 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     });
   }
 
-  getStatus(shipment) {
+  getStatus(shipment: IA1Shipment): STATUS_TYPES {
     const lastActivity =
       shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail?.[0];
     const statusCode = lastActivity?.EventCode?.[0];
     if (statusCode == null) {
       return;
     }
-    const code = statusCode.match(/EVENT_(.*)$/)?.[1];
+    const eventPattern = /EVENT_(.*)$/;
+    const code = +eventPattern.exec(statusCode)?.[1];
     if (isNaN(code)) {
       return;
     }
@@ -121,14 +133,17 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     }
   }
 
-  getActivitiesAndStatus(shipment) {
-    const activities = [];
+  getActivitiesAndStatus(
+    shipment: IA1Shipment
+  ): { activities: Array<IActivity>; status: STATUS_TYPES } {
+    const activities: Array<IActivity> = [];
     const status = this.getStatus(shipment);
     let rawActivities: any[] =
       shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail;
     rawActivities = rawActivities ?? [];
+    // TODO: Type all this raw stuff.
     for (const rawActivity of rawActivities) {
-      let datetime, timestamp;
+      let datetime: Date, timestamp: Date;
       const location = this.presentAddress(rawActivity?.EventLocation?.[0]);
       const rawTimestamp = rawActivity?.EventDateTime?.[0];
       if (rawTimestamp != null) {
@@ -146,7 +161,7 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     return { activities, status };
   }
 
-  getEta(shipment) {
+  getEta(shipment: IA1Shipment): Date {
     const activities =
       shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail || [];
     const firstActivity = activities[activities.length - 1];
@@ -158,15 +173,15 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     ).toDate();
   }
 
-  getService(shipment) {
+  getService(shipment: IA1Shipment): null {
     return null;
   }
 
-  getWeight(shipment) {
+  getWeight(shipment: IA1Shipment): null {
     return null;
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IA1Shipment) {
     return this.presentAddress(shipment?.PackageDestinationLocation?.[0]);
   }
 

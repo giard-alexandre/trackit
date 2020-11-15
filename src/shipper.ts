@@ -13,7 +13,7 @@ export enum STATUS_TYPES {
 
 export interface IShipperClientOptions {
   /**
-   * response includes the raw response received from the shipping carrier API.
+   * Response includes the raw response received from the shipping carrier API.
    */
   raw?: boolean;
   /**
@@ -36,9 +36,10 @@ export interface ILocation {
 }
 
 export interface IActivity {
-  timestamp: Date;
-  location: string;
-  details: string;
+  timestamp?: Date;
+  datetime?: Date;
+  location?: string;
+  details?: string;
 }
 
 /**
