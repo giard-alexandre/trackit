@@ -30,7 +30,7 @@ const handleError = (e: any) => {
 };
 
 describe("prestige client", () => {
-  let _presClient = null;
+  let _presClient: PrestigeClient;
 
   beforeAll(() => (_presClient = new PrestigeClient({})));
 
@@ -47,7 +47,7 @@ describe("prestige client", () => {
     it("creates a GET request", () => expect(_options.method).toBe("GET"));
 
     it("uses the correct URL", () =>
-      expect(_options.uri).toBe(
+      expect(_options.url).toBe(
         "http://www.prestigedelivery.com/TrackingHandler.ashx?trackingNumbers=PS80558274"
       ));
   });
@@ -61,14 +61,16 @@ describe("prestige client", () => {
         fs.readFile(
           "test/stub_data/prestige_delivered.json",
           "utf8",
-          (err, doc) =>
+          (err, doc) => {
+            handleError(err);
             _presClient
-              .presentResponse(doc, "trk")
+              .presentResponse(doc)
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 

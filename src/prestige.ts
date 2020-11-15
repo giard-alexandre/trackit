@@ -6,6 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 /* eslint-disable
     constructor-super,
@@ -27,18 +28,35 @@ import moment from "moment-timezone";
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import { reduce } from "underscore";
-import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IPrestigeShipment {}
+
+interface IPrestigeRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
 
 const ADDR_ATTRS = ["City", "State", "Zip"];
 
-class PrestigeClient extends ShipperClient {
+class PrestigeClient extends ShipperClient<
+  IPrestigeShipment,
+  IPrestigeRequestOptions
+> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["301", STATUS_TYPES.DELIVERED],
     ["302", STATUS_TYPES.OUT_FOR_DELIVERY],
     ["101", STATUS_TYPES.SHIPPING],
   ]);
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<IPrestigeShipment>> {
     response = JSON.parse(response);
     if (!(response != null ? response.length : undefined)) {
       return Promise.resolve({ err: new Error("no tracking info found") });
@@ -149,10 +167,12 @@ class PrestigeClient extends ShipperClient {
     return this.presentAddress("PD", shipment?.TrackingEventHistory?.[0]);
   }
 
-  requestOptions({ trackingNumber }) {
+  requestOptions({
+    trackingNumber,
+  }: IPrestigeRequestOptions): AxiosRequestConfig {
     return {
       method: "GET",
-      uri: `http://www.prestigedelivery.com/TrackingHandler.ashx?trackingNumbers=${trackingNumber}`,
+      url: `http://www.prestigedelivery.com/TrackingHandler.ashx?trackingNumbers=${trackingNumber}`,
     };
   }
 }
