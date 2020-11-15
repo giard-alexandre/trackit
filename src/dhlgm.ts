@@ -6,6 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+import { AxiosRequestConfig } from "axios";
 import { upperCaseFirst } from "change-case";
 /* eslint-disable
     constructor-super,
@@ -29,9 +30,21 @@ import { upperCaseFirst } from "change-case";
  */
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
 
-class DhlGmClient extends ShipperClient {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IDhlgmShipment {}
+
+interface IDhlgmRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
+
+class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["electronic notification received", STATUS_TYPES.SHIPPING],
     ["out for delivery", STATUS_TYPES.OUT_FOR_DELIVERY],
@@ -47,7 +60,7 @@ class DhlGmClient extends ShipperClient {
     ["delivered", STATUS_TYPES.DELIVERED],
   ]);
 
-  validateResponse(response: any): Promise<IShipperResponse> {
+  validateResponse(response: any): Promise<IShipperResponse<IDhlgmShipment>> {
     try {
       response = response.replace(/<br>/gi, " ");
       return Promise.resolve({
@@ -189,10 +202,11 @@ class DhlGmClient extends ShipperClient {
     return this.extractHeaderField(data, "To:");
   }
 
-  requestOptions({ trackingNumber }) {
+  requestOptions(options: IDhlgmRequestOptions): AxiosRequestConfig {
+    const { trackingNumber } = options;
     return {
       method: "GET",
-      uri: `http://webtrack.dhlglobalmail.com/?trackingnumber=${trackingNumber}`,
+      url: `http://webtrack.dhlglobalmail.com/?trackingnumber=${trackingNumber}`,
     };
   }
 }

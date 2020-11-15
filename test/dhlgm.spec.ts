@@ -42,14 +42,16 @@ describe("DHL Global Mail client", () => {
         fs.readFile(
           "test/stub_data/dhlgm_intransit.html",
           "utf8",
-          (err, docs) =>
+          (err, docs) => {
+            handleError(err);
             _dhlgmClient
               .presentResponse(docs, "trk")
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -93,14 +95,16 @@ describe("DHL Global Mail client", () => {
         fs.readFile(
           "test/stub_data/dhlgm_delivered.html",
           "utf8",
-          (err, docs) =>
+          (err, docs) => {
+            handleError(err);
             _dhlgmClient
               .presentResponse(docs, "trk")
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -143,15 +147,16 @@ describe("DHL Global Mail client", () => {
 
     describe("en-route package with eta", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/dhlgm_eta.html", "utf8", (err, docs) =>
+        fs.readFile("test/stub_data/dhlgm_eta.html", "utf8", (err, docs) => {
+          handleError(err);
           _dhlgmClient
             .presentResponse(docs, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
-        )
+            }, handleError);
+        })
       );
 
       it("has a status of en-route", () =>

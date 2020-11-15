@@ -40,10 +40,8 @@ interface IDhlClientOptions extends IShipperClientOptions {
   password: string;
 }
 
-interface IDhlShipment {
-  $: cheerio.Root;
-  response: any;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IDhlShipment {}
 
 interface IDhlRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
@@ -159,6 +157,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
       if (awbInfo == null) {
         return { err: new Error("no AWBInfo in response") };
       }
+      // TODO Fix the shipment interface
       const shipment =
         awbInfo.ShipmentInfo != null ? awbInfo.ShipmentInfo[0] : undefined;
       if (shipment == null) {
