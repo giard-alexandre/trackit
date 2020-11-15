@@ -1,12 +1,4 @@
 /* eslint-disable @typescript-eslint/prefer-regexp-exec */
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 // TODO: This file was created by bulk-decaffeinate.
 import { upperCase } from "change-case";
 import { uniq } from "underscore";
@@ -153,8 +145,14 @@ function _confirmA1International(trk: string): boolean[] {
   return [false, false];
 }
 
+interface ICarrierMatcher {
+  name: string;
+  regex: RegExp;
+  confirm?: (trk: string) => boolean[];
+}
+
 // TODO: Add carrier name enums
-const CARRIERS = [
+const CARRIERS: ICarrierMatcher[] = [
   { name: "ups", regex: /^1Z[0-9A-Z]{16}$/, confirm: _confirmUps },
   {
     name: "ups",
@@ -203,7 +201,7 @@ const CARRIERS = [
 ];
 
 export default (trk: string): string[] => {
-  const carriers = [];
+  const carriers: string[] = [];
   trk = _preprocess(trk);
 
   CARRIERS.every((c) => {
@@ -221,5 +219,6 @@ export default (trk: string): string[] => {
     return true;
   });
 
-  return uniq(carriers);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+  return uniq<string[]>(carriers);
 };
