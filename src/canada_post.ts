@@ -5,7 +5,9 @@
     no-this-before-super,
     no-unused-vars,
 */
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
+import { RequestInfo, RequestInit } from "node-fetch";
 /* eslint-disable
 	@typescript-eslint/restrict-template-expressions,
 	@typescript-eslint/no-unsafe-member-access,
@@ -39,7 +41,19 @@ interface ICanadaPostClientOptions extends IShipperClientOptions {
   password: string;
 }
 
-class CanadaPostClient extends ShipperClient {
+interface ICanadaPostShipment {
+  $: cheerio.Root;
+  response: any;
+}
+
+interface ICanadaPostRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
+
+class CanadaPostClient extends ShipperClient<
+  ICanadaPostShipment,
+  ICanadaPostRequestOptions
+> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["in transit", STATUS_TYPES.EN_ROUTE],
     ["processed", STATUS_TYPES.EN_ROUTE],
@@ -75,7 +89,9 @@ class CanadaPostClient extends ShipperClient {
     this.parser = new Parser();
   }
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<ICanadaPostShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<any>((resolve, reject) => {
@@ -187,11 +203,14 @@ class CanadaPostClient extends ShipperClient {
       : undefined;
   }
 
-  requestOptions({ trackingNumber }) {
+  public requestOptions(
+    options: ICanadaPostRequestOptions
+  ): AxiosRequestConfig {
+    const { trackingNumber } = options;
     return {
+      url: `https://soa-gw.canadapost.ca/vis/track/pin/${trackingNumber}/detail.xml`,
       method: "GET",
-      uri: `https://soa-gw.canadapost.ca/vis/track/pin/${trackingNumber}/detail.xml`,
-      auth: { user: this.username, pass: this.password },
+      auth: { username: this.username, password: this.password },
     };
   }
 }

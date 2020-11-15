@@ -47,14 +47,16 @@ describe("canada post client", () => {
       fs.readFile(
         "test/stub_data/canada_post_delivered.xml",
         "utf8",
-        (err, xmlDoc) =>
+        (err, xmlDoc) => {
+          handleError(err);
           _canpostClient
             .presentResponse(xmlDoc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
+            }, handleError);
+        }
       )
     );
 
@@ -94,14 +96,16 @@ describe("canada post client", () => {
       fs.readFile(
         "test/stub_data/canada_post_en_route.xml",
         "utf8",
-        (err, xmlDoc) =>
+        (err, xmlDoc) => {
+          handleError(err);
           _canpostClient
             .presentResponse(xmlDoc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
+            }, handleError);
+        }
       )
     );
 
@@ -141,14 +145,16 @@ describe("canada post client", () => {
       fs.readFile(
         "test/stub_data/canada_post_shipping.xml",
         "utf8",
-        (err, xmlDoc) =>
+        (err, xmlDoc) => {
+          handleError(err);
           _canpostClient
             .presentResponse(xmlDoc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
+            }, handleError);
+        }
       )
     );
 
@@ -178,14 +184,16 @@ describe("canada post client", () => {
       fs.readFile(
         "test/stub_data/canada_post_delivered2.xml",
         "utf8",
-        (err, xmlDoc) =>
+        (err, xmlDoc) => {
+          handleError(err);
           _canpostClient
             .presentResponse(xmlDoc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
+            }, handleError);
+        }
       )
     );
 
@@ -200,14 +208,16 @@ describe("canada post client", () => {
       fs.readFile(
         "test/stub_data/canada_post_delayed.xml",
         "utf8",
-        (err, xmlDoc) =>
+        (err, xmlDoc) => {
+          handleError(err);
           _canpostClient
             .presentResponse(xmlDoc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
+            }, handleError);
+        }
       )
     );
 
@@ -222,14 +232,16 @@ describe("canada post client", () => {
       fs.readFile(
         "test/stub_data/canada_post_departed.xml",
         "utf8",
-        (err, xmlDoc) =>
+        (err, xmlDoc) => {
+          handleError(err);
           _canpostClient
             .presentResponse(xmlDoc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
+            }, handleError);
+        }
       )
     );
 
