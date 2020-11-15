@@ -15,18 +15,7 @@ import moment from "moment-timezone";
     no-this-before-super,
     no-unused-vars
 */
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+// TODO: Fix any style issues and re-enable lint.
 import { Parser } from "xml2js";
 import {
   IShipmentActivities,
@@ -41,11 +30,38 @@ interface IDhlClientOptions extends IShipperClientOptions {
   password: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IDhlShipment {}
+interface IDhlRawActivity {
+  Date: string[];
+  Time: string[];
+  ServiceEvent: {
+    Description: string[];
+    EventCode: string[];
+  }[];
+  ServiceArea: {
+    Description: string[];
+  }[];
+}
+
+interface IDhlShipment {
+  EstDlvyDate: string[];
+  Weight: string[];
+  ShipmentEvent: IDhlRawActivity[];
+  DestinationServiceArea: {
+    Description: string[];
+  }[];
+}
 
 interface IDhlRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
+}
+
+interface IDhlResponse {
+  "req:TrackingResponse": {
+    AWBInfo: {
+      ShipmentInfo: IDhlShipment[];
+      Status: { ActionStatus: string }[];
+    };
+  };
 }
 
 class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
@@ -106,12 +122,10 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
 
   constructor(options: IDhlClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
   }
 
-  generateRequest(trk): string {
+  generateRequest(trk: string): string {
     return `\
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <req:KnownTrackingRequest xmlns:req="http://www.dhl.com">
@@ -129,11 +143,11 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
   }
 
   async validateResponse(
-    response: any
+    response: string
   ): Promise<IShipperResponse<IDhlShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
+      const trackResult = await new Promise<IDhlResponse>((resolve, reject) => {
         this.parser.parseString(response, (xmlErr, trackResult) => {
           if (xmlErr) {
             reject(xmlErr);
@@ -158,7 +172,6 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
       if (awbInfo == null) {
         return { err: new Error("no AWBInfo in response") };
       }
-      // TODO Fix the shipment interface
       const shipment =
         awbInfo.ShipmentInfo != null ? awbInfo.ShipmentInfo[0] : undefined;
       if (shipment == null) {
@@ -177,7 +190,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
     }
   }
 
-  getEta(shipment) {
+  getEta(shipment: IDhlShipment): Date {
     const eta =
       shipment.EstDlvyDate != null ? shipment.EstDlvyDate[0] : undefined;
     const formatSpec = "YYYYMMDD HHmmss ZZ";
@@ -186,18 +199,18 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
     }
   }
 
-  getService(shipment) {
+  getService(_: IDhlShipment): undefined {
     return undefined;
   }
 
-  getWeight(shipment) {
+  getWeight(shipment: IDhlShipment): string {
     const weight = shipment.Weight != null ? shipment.Weight[0] : undefined;
     if (weight != null) {
       return `${weight} LB`;
     }
   }
 
-  presentTimestamp(dateString, timeString) {
+  presentTimestamp(dateString: string, timeString: string): Date {
     if (dateString == null) {
       return;
     }
@@ -209,8 +222,8 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
     return moment(inputString, formatSpec).toDate();
   }
 
-  presentAddress(rawAddress: string) {
-    let city, countryCode, stateCode;
+  presentAddress(rawAddress: string): string {
+    let city: string, countryCode: string, stateCode: string;
     if (rawAddress == null) {
       return;
     }
@@ -237,7 +250,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
     });
   }
 
-  presentDetails(rawAddress, rawDetails) {
+  presentDetails(rawAddress: string, rawDetails: string): string {
     if (rawDetails == null) {
       return;
     }
@@ -250,14 +263,14 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
       .replace(new RegExp(`(?: at| in)? ${rawAddress.trim()}$`), "");
   }
 
-  presentStatus(status) {
+  presentStatus(status: string): STATUS_TYPES {
     return this.STATUS_MAP.get(status) || STATUS_TYPES.UNKNOWN;
   }
 
-  getActivitiesAndStatus(shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IDhlShipment): IShipmentActivities {
     const activities = [];
     let status = null;
-    let rawActivities: any[] = shipment.ShipmentEvent;
+    let rawActivities: IDhlRawActivity[] = shipment.ShipmentEvent;
     if (rawActivities == null) {
       rawActivities = [];
     }
@@ -290,7 +303,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
     return { activities, status };
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IDhlShipment): string {
     const destination = shipment?.DestinationServiceArea?.[0]?.Description?.[0];
     if (destination == null) {
       return;
