@@ -25,10 +25,26 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
 
-class LasershipClient extends ShipperClient {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface ILasershipShipment {}
+
+interface ILasershipRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
+
+class LasershipClient extends ShipperClient<
+  ILasershipShipment,
+  ILasershipRequestOptions
+> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["Released", STATUS_TYPES.DELIVERED],
     ["Delivered", STATUS_TYPES.DELIVERED],
@@ -39,7 +55,9 @@ class LasershipClient extends ShipperClient {
     ["OrderCreated", STATUS_TYPES.SHIPPING],
   ]);
 
-  validateResponse(response: any): Promise<IShipperResponse> {
+  validateResponse(
+    response: any
+  ): Promise<IShipperResponse<ILasershipShipment>> {
     try {
       response = JSON.parse(response);
       if (response.Events == null) {
@@ -131,10 +149,12 @@ class LasershipClient extends ShipperClient {
     return this.presentAddress(destination);
   }
 
-  requestOptions({ trackingNumber }) {
+  requestOptions({
+    trackingNumber,
+  }: ILasershipRequestOptions): AxiosRequestConfig {
     return {
       method: "GET",
-      uri: `http://www.lasership.com/track/${trackingNumber}/json`,
+      url: `http://www.lasership.com/track/${trackingNumber}/json`,
     };
   }
 }

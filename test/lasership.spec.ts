@@ -46,11 +46,12 @@ describe("lasership client", () => {
     it("creates a GET request", () => expect(_options.method).toBe("GET"));
 
     it("uses the correct URL", () =>
-      expect(_options.uri).toBe(
+      expect(_options.url).toBe(
         "http://www.lasership.com/track/LA40305346/json"
       ));
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   describe("validateResponse", () => {});
 
   describe("integration tests", () => {
@@ -61,14 +62,16 @@ describe("lasership client", () => {
         fs.readFile(
           "test/stub_data/lasership_delivered.json",
           "utf8",
-          (err, doc) =>
+          (err, doc) => {
+            handleError(err);
             _lsClient
               .presentResponse(doc, "trk")
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -99,14 +102,16 @@ describe("lasership client", () => {
         fs.readFile(
           "test/stub_data/lasership_released.json",
           "utf8",
-          (err, doc) =>
+          (err, doc) => {
+            handleError(err);
             _lsClient
               .presentResponse(doc, "trk")
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -125,14 +130,16 @@ describe("lasership client", () => {
         fs.readFile(
           "test/stub_data/lasership_enroute.json",
           "utf8",
-          (err, doc) =>
+          (err, doc) => {
+            handleError(err);
             _lsClient
               .presentResponse(doc, "trk")
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
