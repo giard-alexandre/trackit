@@ -1,4 +1,3 @@
-// TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";

@@ -1,12 +1,3 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
@@ -44,12 +35,18 @@ const DAYS_OF_WEEK = {
 
 interface IAmazonShipment {
   $: cheerio.Root;
-  response: any;
+  response: {
+    toString: () => string;
+  };
 }
 
 interface IAmazonRequestOptions extends IShipperClientOptions {
   orderID: string;
   orderingShipmentId: string;
+}
+
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 
 class AmazonClient extends ShipperClient<
@@ -65,22 +62,22 @@ class AmazonClient extends ShipperClient<
   ]);
 
   async validateResponse(
-    response: any
+    response: string
   ): Promise<IShipperResponse<IAmazonShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
 
     return Promise.resolve({ err: null, shipment: { $, response } });
   }
 
-  getService() {
+  getService(): undefined {
     return undefined;
   }
 
-  getWeight() {
+  getWeight(): undefined {
     return undefined;
   }
 
-  getDestination(data) {
+  getDestination(data: IAmazonShipment): string {
     if (data == null) {
       return;
     }
@@ -91,7 +88,7 @@ class AmazonClient extends ShipperClient<
     }
   }
 
-  getEta(data) {
+  getEta(data: IAmazonShipment): Date {
     if (data == null) {
       return;
     }
@@ -103,10 +100,12 @@ class AmazonClient extends ShipperClient<
       milliseconds: 0,
     });
     const { response } = data;
+    // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
     let matchResult = response
       .toString()
       .match('"promiseMessage":"Arriving (.*?)"');
     if (matchResult == null) {
+      // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
       matchResult = response
         .toString()
         .match('"promiseMessage":"Now expected (.*?)"');
@@ -136,7 +135,7 @@ class AmazonClient extends ShipperClient<
         });
       } else {
         for (const dayOfWeek in DAYS_OF_WEEK) {
-          const dayNum = DAYS_OF_WEEK[dayOfWeek];
+          const dayNum = DAYS_OF_WEEK[dayOfWeek] as number;
           // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
           if (arrival?.toUpperCase().match(dayOfWeek)) {
             eta = setDay(baseDate, dayNum);
@@ -150,13 +149,14 @@ class AmazonClient extends ShipperClient<
     return eta != null ? eta : undefined;
   }
 
-  presentStatus(data) {
+  presentStatus(data: IAmazonShipment): STATUS_TYPES {
     const { response } = data;
+    // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
     const matches = response.toString().match('"shortStatus":"(.*?)"');
     return matches?.length > 0 ? this.STATUS_MAP.get(matches[1]) : undefined;
   }
 
-  getActivitiesAndStatus(data): IShipmentActivities {
+  getActivitiesAndStatus(data: IAmazonShipment): IShipmentActivities {
     const activities = [];
     const status = this.presentStatus(data);
     if (data == null) {
@@ -172,9 +172,9 @@ class AmazonClient extends ShipperClient<
         continue;
       }
       let dateText = "";
-      const rows: any[] = Array.from($(row).children(".a-row"));
-      for (let subrow of rows) {
-        subrow = $(subrow);
+      const rows = Array.from($(row).children(".a-row"));
+      for (const row of rows) {
+        const subrow = $(row);
         const cols = subrow.children(".a-column");
         if (subrow.hasClass("tracking-event-date-header")) {
           dateText = subrow.children(".tracking-event-date").text();
