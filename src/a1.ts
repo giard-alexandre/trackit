@@ -1,7 +1,3 @@
-/* eslint-disable
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment
-*/
 // TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
@@ -36,10 +32,22 @@ interface ITrackingEventHistory {
 interface IA1Shipment {
   TrackingEventHistory: ITrackingEventHistory[];
   PackageDestinationLocation: IA1Address[];
+  TrackingNumber: string;
 }
 
 interface IA1RequestOptions extends IShipperClientOptions {
   trackingNumber: string;
+}
+
+interface IA1TrackResult {
+  AmazonTrackingResponse: {
+    PackageTrackingInfo: IA1Shipment[];
+    TrackingErrorInfo: {
+      TrackingErrorDetail: {
+        ErrorDetailCodeDesc: string[];
+      }[];
+    }[];
+  };
 }
 
 class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
@@ -63,15 +71,17 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
   ): Promise<IShipperResponse<IA1Shipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
-        this.parser.parseString(response, (xmlErr, trackResult) => {
-          if (xmlErr) {
-            reject(xmlErr);
-          } else {
-            resolve(trackResult);
-          }
-        });
-      });
+      const trackResult = await new Promise<IA1TrackResult>(
+        (resolve, reject) => {
+          this.parser.parseString(response, (xmlErr, trackResult) => {
+            if (xmlErr) {
+              reject(xmlErr);
+            } else {
+              resolve(trackResult);
+            }
+          });
+        }
+      );
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
@@ -79,18 +89,17 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
       const trackingInfo =
         trackResult?.AmazonTrackingResponse?.PackageTrackingInfo?.[0];
       if (trackingInfo?.TrackingNumber == null) {
-        const errorInfo =
-          trackResult?.AmazonTrackingResponse?.TrackingErrorInfo?.[0];
         const error =
-          errorInfo?.TrackingErrorDetail?.[0]?.ErrorDetailCodeDesc?.[0];
+          trackResult?.AmazonTrackingResponse?.TrackingErrorInfo?.[0]
+            ?.TrackingErrorDetail?.[0]?.ErrorDetailCodeDesc?.[0];
         if (error != null) {
-          return { err: error };
+          return { err: new Error(error) };
         }
         return { err: new Error("unknown error") };
       }
       return { shipment: trackingInfo };
     } catch (e) {
-      return { err: e };
+      return { err: new Error(e) };
     }
   }
 

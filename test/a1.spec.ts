@@ -6,8 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
+// TODO: Fix any style issues and re-enable lint.
 /*
  * decaffeinate suggestions:
  * DS102: Remove unnecessary code created because of implicit returns
@@ -125,8 +124,10 @@ describe("a1 client", () => {
       );
 
       it("complains about an invalid tracking number", () =>
-        expect(_err).toBe(
-          "No data exists in the carrier's system for the given tracking number"
+        expect(_err).toEqual(
+          new Error(
+            "No data exists in the carrier's system for the given tracking number"
+          )
         ));
     });
   });
