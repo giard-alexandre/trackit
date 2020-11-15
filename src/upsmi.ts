@@ -26,11 +26,24 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
 
-class UpsMiClient extends ShipperClient {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IUpsmiShipment {}
+
+interface IUpsmiRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
+
+class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["post office entry", STATUS_TYPES.EN_ROUTE],
     ["out for post office delivery", STATUS_TYPES.OUT_FOR_DELIVERY],
@@ -42,7 +55,7 @@ class UpsMiClient extends ShipperClient {
     ["sorted", STATUS_TYPES.EN_ROUTE],
   ]);
 
-  validateResponse(response: any): Promise<IShipperResponse> {
+  validateResponse(response: any): Promise<IShipperResponse<IUpsmiShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
     const summary = $("#Table6")?.find("table")?.[0];
     const uspsDetails = $("#ctl00_mainContent_ctl00_pnlUSPS > table");
@@ -188,10 +201,10 @@ class UpsMiClient extends ShipperClient {
     }
   }
 
-  requestOptions({ trackingNumber }) {
+  requestOptions({ trackingNumber }: IUpsmiRequestOptions): AxiosRequestConfig {
     return {
       method: "GET",
-      uri: `http://www.ups-mi.net/packageID/PackageID.aspx?PID=${trackingNumber}`,
+      url: `http://www.ups-mi.net/packageID/PackageID.aspx?PID=${trackingNumber}`,
     };
   }
 }

@@ -32,7 +32,7 @@ const handleError = (e: any) => {
 };
 
 describe("usps client", () => {
-  let _uspsClient = null;
+  let _uspsClient: UspsClient;
   const _xmlParser = new Parser();
 
   beforeAll(() => (_uspsClient = new UspsClient({ userId: "hello-neuman" })));
@@ -50,36 +50,42 @@ describe("usps client", () => {
 
     it("includes TrackFieldRequest in the track request document", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
+        handleError(err);
         expect(doc).toHaveProperty("TrackFieldRequest");
         return done();
       }));
 
     it("includes user ID in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
+        handleError(err);
         expect(doc.TrackFieldRequest.$.USERID).toBe("hello-neuman");
         return done();
       }));
 
     it("includes revision 1 in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
+        handleError(err);
         expect(doc.TrackFieldRequest.Revision[0]).toBe("1");
         return done();
       }));
 
     it("includes client IP in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
+        handleError(err);
         expect(doc.TrackFieldRequest.ClientIp[0]).toBe("10.10.5.2");
         return done();
       }));
 
     it("includes source ID in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
+        handleError(err);
         expect(doc.TrackFieldRequest.SourceId[0]).toBe("shipit");
         return done();
       }));
 
     it("includes track ID in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
+        handleError(err);
         expect(doc.TrackFieldRequest.TrackID[0].$.ID).toBe(
           "9400111899560008231892"
         );
@@ -95,14 +101,16 @@ describe("usps client", () => {
         fs.readFile(
           "test/stub_data/usps_pre_shipment.xml",
           "utf8",
-          (err, xmlDoc) =>
+          (err, xmlDoc) => {
+            handleError(err);
             _uspsClient
-              .presentResponse(xmlDoc, "trk")
+              .presentResponse(xmlDoc, { trackingNumber: "trk" })
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -130,14 +138,16 @@ describe("usps client", () => {
         fs.readFile(
           "test/stub_data/usps_delivered.xml",
           "utf8",
-          (err, xmlDoc) =>
+          (err, xmlDoc) => {
+            handleError(err);
             _uspsClient
-              .presentResponse(xmlDoc, "trk")
+              .presentResponse(xmlDoc, { trackingNumber: "trk" })
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -168,14 +178,16 @@ describe("usps client", () => {
         fs.readFile(
           "test/stub_data/usps_out_for_delivery.xml",
           "utf8",
-          (err, xmlDoc) =>
+          (err, xmlDoc) => {
+            handleError(err);
             _uspsClient
-              .presentResponse(xmlDoc, "trk")
+              .presentResponse(xmlDoc, { trackingNumber: "trk" })
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(err).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -206,14 +218,16 @@ describe("usps client", () => {
         fs.readFile(
           "test/stub_data/usps_predicted_eta.xml",
           "utf8",
-          (err, xmlDoc) =>
+          (err, xmlDoc) => {
+            handleError(err);
             _uspsClient
-              .presentResponse(xmlDoc, "trk")
+              .presentResponse(xmlDoc, { trackingNumber: "trk" })
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 

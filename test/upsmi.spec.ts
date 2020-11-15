@@ -37,7 +37,7 @@ function verifyActivity(act, ts, loc, details) {
 }
 
 describe("ups mi client", () => {
-  let _upsMiClient = null;
+  let _upsMiClient: UpsMiClient;
 
   beforeAll(() => (_upsMiClient = new UpsMiClient()));
 
@@ -49,14 +49,16 @@ describe("ups mi client", () => {
           fs.readFile(
             "test/stub_data/upsmi_delivered.html",
             "utf8",
-            (err, docs) =>
+            (err, docs) => {
+              handleError(err);
               _upsMiClient
-                .presentResponse(docs, "trk")
+                .presentResponse(docs, { trackingNumber: "trk" })
                 .then(({ err: respErr, presentedResponse: resp }) => {
                   expect(respErr).toBeFalsy();
                   _package = resp;
                   return resolve();
-                })
+                }, handleError);
+            }
           );
         });
         return promise;
@@ -96,14 +98,19 @@ describe("ups mi client", () => {
     describe("about to ship package", () => {
       let _package = null;
       beforeEach((done) =>
-        fs.readFile("test/stub_data/upsmi_shipping.html", "utf8", (err, docs) =>
-          _upsMiClient
-            .presentResponse(docs, "trk")
-            .then(({ err: respErr, presentedResponse: resp }) => {
-              expect(respErr).toBeFalsy();
-              _package = resp;
-              return done();
-            })
+        fs.readFile(
+          "test/stub_data/upsmi_shipping.html",
+          "utf8",
+          (err, docs) => {
+            handleError(err);
+            _upsMiClient
+              .presentResponse(docs, { trackingNumber: "trk" })
+              .then(({ err: respErr, presentedResponse: resp }) => {
+                expect(respErr).toBeFalsy();
+                _package = resp;
+                return done();
+              }, handleError);
+          }
         )
       );
 

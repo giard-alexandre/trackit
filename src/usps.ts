@@ -26,6 +26,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
+import { AxiosRequestConfig } from "axios";
 import { Builder, Parser } from "xml2js";
 import {
   IShipperClientOptions,
@@ -38,7 +39,16 @@ interface IUspsClientOptions extends IShipperClientOptions {
   userId: string;
 }
 
-class UspsClient extends ShipperClient {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IUspsShipment {}
+
+interface IUspsRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+  clientIp?: string;
+  test?: boolean;
+}
+
+class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["Accept", STATUS_TYPES.EN_ROUTE],
     ["Processed", STATUS_TYPES.EN_ROUTE],
@@ -99,7 +109,9 @@ class UspsClient extends ShipperClient {
     });
   }
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<IUspsShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<any>((resolve, reject) => {
@@ -265,12 +277,16 @@ class UspsClient extends ShipperClient {
     return { activities, status: this.getStatus(shipment) };
   }
 
-  requestOptions({ trackingNumber, clientIp, test }) {
+  requestOptions({
+    trackingNumber,
+    clientIp,
+    test,
+  }: IUspsRequestOptions): AxiosRequestConfig {
     const endpoint = test ? "ShippingAPITest.dll" : "ShippingAPI.dll";
     const xml = this.generateRequest(trackingNumber, clientIp);
     return {
       method: "GET",
-      uri: `http://production.shippingapis.com/${endpoint}?API=TrackV2&XML=${xml}`,
+      url: `http://production.shippingapis.com/${endpoint}?API=TrackV2&XML=${xml}`,
     };
   }
 }
