@@ -30,6 +30,7 @@ import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import moment from "moment-timezone";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -176,7 +177,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     return activities;
   }
 
-  getActivitiesAndStatus(data) {
+  getActivitiesAndStatus(data): IShipmentActivities {
     let status = null;
     const { $, uspsDetails, miDetails } = data;
     const set1 = this.extractActivities($, uspsDetails);

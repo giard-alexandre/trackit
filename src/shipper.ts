@@ -42,6 +42,11 @@ export interface IActivity {
   details?: string;
 }
 
+export interface IShipmentActivities {
+  activities: Array<IActivity>;
+  status: STATUS_TYPES;
+}
+
 /**
  * @param TShipment The type of the shipment activity
  * @param TRequestOptions The structure of the request options used to build the request to the carrier.
@@ -56,7 +61,7 @@ export abstract class ShipperClient<
 
   public abstract getActivitiesAndStatus(
     shipment: TShipment
-  ): { activities: Array<IActivity>; status: STATUS_TYPES };
+  ): IShipmentActivities;
 
   public abstract getEta(shipment: TShipment): Date;
 

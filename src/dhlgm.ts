@@ -31,6 +31,7 @@ import { upperCaseFirst } from "change-case";
 import { load } from "cheerio";
 import moment from "moment-timezone";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -156,7 +157,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     return this.findStatusFromMap(details);
   }
 
-  getActivitiesAndStatus(data) {
+  getActivitiesAndStatus(data): IShipmentActivities {
     let status = null;
     const activities = [];
     if (data == null) {

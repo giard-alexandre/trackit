@@ -1,10 +1,3 @@
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-*/
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 /* eslint-disable
@@ -15,20 +8,10 @@ import moment from "moment-timezone";
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+// TODO: Fix any style issues and re-enable lint.
 import { Parser } from "xml2js";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -116,7 +99,7 @@ class CanadaPostClient extends ShipperClient<
     }
   }
 
-  findStatusFromMap(statusText) {
+  findStatusFromMap(statusText): STATUS_TYPES {
     let status = STATUS_TYPES.UNKNOWN;
     if (statusText && statusText.length > 0) {
       for (const [key, value] of this.STATUS_MAP) {
@@ -129,13 +112,13 @@ class CanadaPostClient extends ShipperClient<
     return status;
   }
 
-  getStatus(lastEvent) {
+  getStatus(lastEvent): STATUS_TYPES {
     return this.findStatusFromMap(
       lastEvent != null ? lastEvent.details : undefined
     );
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment: ICanadaPostShipment): IShipmentActivities {
     const activities = [];
     const events = shipment?.["significant-events"]?.[0]?.occurrence;
     for (const event of events || []) {

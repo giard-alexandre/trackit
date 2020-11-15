@@ -8,6 +8,7 @@ import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import {
   IActivity,
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -132,9 +133,7 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     }
   }
 
-  getActivitiesAndStatus(
-    shipment: IA1Shipment
-  ): { activities: Array<IActivity>; status: STATUS_TYPES } {
+  getActivitiesAndStatus(shipment: IA1Shipment): IShipmentActivities {
     const activities: Array<IActivity> = [];
     const status = this.getStatus(shipment);
     let rawActivities: ITrackingEventDetail[] =

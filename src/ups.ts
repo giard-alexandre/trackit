@@ -31,6 +31,7 @@ import moment from "moment-timezone";
  */
 import { Builder, Parser } from "xml2js";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -254,7 +255,7 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     return this.presentAddress(shipment?.ShipTo?.[0]?.Address?.[0]);
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment): IShipmentActivities {
     const activities = [];
     let status = null;
     const rawActivities: any[] = shipment?.Package?.[0]?.Activity;

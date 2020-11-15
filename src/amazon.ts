@@ -11,6 +11,7 @@ import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -155,7 +156,7 @@ class AmazonClient extends ShipperClient<
     return matches?.length > 0 ? this.STATUS_MAP.get(matches[1]) : undefined;
   }
 
-  getActivitiesAndStatus(data) {
+  getActivitiesAndStatus(data): IShipmentActivities {
     const activities = [];
     const status = this.presentStatus(data);
     if (data == null) {

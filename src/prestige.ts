@@ -29,6 +29,7 @@ import moment from "moment-timezone";
  */
 import { reduce } from "underscore";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -109,7 +110,7 @@ class PrestigeClient extends ShipperClient<
     }
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment): IShipmentActivities {
     const activities = [];
     let status = null;
     // TODO: remove all rawActivities weirdness with nullchecks

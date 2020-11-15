@@ -28,6 +28,7 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -88,7 +89,7 @@ class LasershipClient extends ShipperClient<
     }
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment): IShipmentActivities {
     const activities = [];
     let status = null;
     let rawActivities = shipment != null ? shipment.Events : undefined;

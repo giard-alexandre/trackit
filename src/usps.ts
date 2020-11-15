@@ -29,6 +29,7 @@
 import { AxiosRequestConfig } from "axios";
 import { Builder, Parser } from "xml2js";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -260,7 +261,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     return activity;
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment): IShipmentActivities {
     const activities = [];
     const trackSummary = this.presentActivity(shipment?.TrackSummary?.[0]);
     if (trackSummary != null) {

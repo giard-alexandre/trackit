@@ -11,6 +11,7 @@ import moment from "moment-timezone";
 import { find } from "underscore";
 import { Builder, Parser } from "xml2js";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -209,7 +210,7 @@ export class FedexClient extends ShipperClient<
       : STATUS_TYPES.UNKNOWN;
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment): IShipmentActivities {
     const activities = [];
     for (const rawActivity of shipment?.Events || []) {
       let datetime, timestamp;

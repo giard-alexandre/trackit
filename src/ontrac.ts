@@ -29,6 +29,7 @@ import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import { load } from "cheerio";
 import moment from "moment-timezone";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -168,7 +169,7 @@ class OnTracClient extends ShipperClient<
     return moment(new Date(`${ts} +0000`)).toDate();
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment): IShipmentActivities {
     const activities = [];
     const status = this.presentStatus(
       this.extractSummaryField(shipment, "Delivery Status")

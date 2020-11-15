@@ -29,6 +29,7 @@ import moment from "moment-timezone";
  */
 import { Parser } from "xml2js";
 import {
+  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -253,7 +254,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
     return this.STATUS_MAP.get(status) || STATUS_TYPES.UNKNOWN;
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment): IShipmentActivities {
     const activities = [];
     let status = null;
     let rawActivities: any[] = shipment.ShipmentEvent;
