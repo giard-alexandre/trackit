@@ -1,12 +1,3 @@
-/* eslint-disable prefer-regex-literals,@typescript-eslint/prefer-regexp-exec */
-/* eslint-disable
-    camelcase,
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-*/
 /* eslint-disable
 	@typescript-eslint/restrict-template-expressions,
 	@typescript-eslint/no-unsafe-member-access,
@@ -15,15 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+// TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
@@ -35,18 +18,18 @@ import {
 } from "./shipper";
 
 const MONTHS = [
-  "JANUARY",
-  "FEBRUARY",
-  "MARCH",
-  "APRIL",
-  "MAY",
-  "JUNE",
-  "JULY",
-  "AUGUST",
-  "SEPTEMBER",
-  "OCTOBER",
-  "NOVEMBER",
-  "DECEMBER",
+  /JANUARY/,
+  /FEBRUARY/,
+  /MARCH/,
+  /APRIL/,
+  /MAY/,
+  /JUNE/,
+  /JULY/,
+  /AUGUST/,
+  /SEPTEMBER/,
+  /OCTOBER/,
+  /NOVEMBER/,
+  /DECEMBER/,
 ];
 const DAYS_OF_WEEK = {
   SUNDAY: 0,
@@ -128,19 +111,17 @@ class AmazonClient extends ShipperClient<
         .match('"promiseMessage":"Now expected (.*?)"');
     }
     let arrival: string = matchResult != null ? matchResult[1] : undefined;
-    if (arrival != null ? new RegExp("today").exec(arrival) : undefined) {
+    if (arrival != null ? /today/.exec(arrival) : undefined) {
       eta = baseDate;
-    } else if (
-      arrival != null ? new RegExp("tomorrow").exec(arrival) : undefined
-    ) {
+    } else if (arrival != null ? /tomorrow/.exec(arrival) : undefined) {
       eta = addDays(baseDate, 1);
     } else {
-      if (arrival != null ? new RegExp("-").exec(arrival) : undefined) {
+      if (arrival != null ? /-/.exec(arrival) : undefined) {
         arrival = arrival.split("-")[1]; // Get latest possible ETA
       }
       let foundMonth = false;
       for (const month of Array.from(MONTHS)) {
-        if (arrival?.toUpperCase().match(month)) {
+        if (month.exec(arrival?.toUpperCase())) {
           foundMonth = true;
         }
       }
@@ -155,6 +136,7 @@ class AmazonClient extends ShipperClient<
       } else {
         for (const dayOfWeek in DAYS_OF_WEEK) {
           const dayNum = DAYS_OF_WEEK[dayOfWeek];
+          // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
           if (arrival?.toUpperCase().match(dayOfWeek)) {
             eta = setDay(baseDate, dayNum);
           }
@@ -199,7 +181,7 @@ class AmazonClient extends ShipperClient<
             dateText += `, ${new Date().getUTCFullYear()}`;
           }
         } else if (cols.length === 2) {
-          let timestamp;
+          let timestamp: Date;
           const details = $(cols[1]).find(".tracking-event-message").text();
           const location = $(cols[1]).find(".tracking-event-location").text();
           const timeText = $(cols[0]).find(".tracking-event-time").text();

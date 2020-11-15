@@ -1,10 +1,4 @@
 /* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
 	@typescript-eslint/restrict-template-expressions,
 	@typescript-eslint/no-unsafe-member-access,
 	@typescript-eslint/no-unsafe-assignment,
