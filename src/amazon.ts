@@ -26,7 +26,13 @@
  */
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
-import { IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import { RequestInfo, RequestInit } from "node-fetch";
+import {
+  IShipperClientOptions,
+  IShipperResponse,
+  ShipperClient,
+  STATUS_TYPES,
+} from "./shipper";
 
 const MONTHS = [
   "JANUARY",
@@ -52,7 +58,20 @@ const DAYS_OF_WEEK = {
   SATURDAY: 6,
 };
 
-class AmazonClient extends ShipperClient {
+interface IAmazonShipment {
+  $: cheerio.Root;
+  response: any;
+}
+
+interface IAmazonRequestOptions extends IShipperClientOptions {
+  orderID: string;
+  orderingShipmentId: string;
+}
+
+class AmazonClient extends ShipperClient<
+  IAmazonShipment,
+  IAmazonRequestOptions
+> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["ORDERED", STATUS_TYPES.SHIPPING],
     ["SHIPPED", STATUS_TYPES.EN_ROUTE],
@@ -61,7 +80,9 @@ class AmazonClient extends ShipperClient {
     ["DELIVERED", STATUS_TYPES.DELIVERED],
   ]);
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<IAmazonShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
 
     return Promise.resolve({ err: null, shipment: { $, response } });
@@ -196,20 +217,25 @@ class AmazonClient extends ShipperClient {
     return { activities, status };
   }
 
-  requestOptions({ orderID, orderingShipmentId }) {
+  public requestOptions(
+    options: IAmazonRequestOptions
+  ): { req: RequestInfo; opts: RequestInit } {
+    const { orderID, orderingShipmentId } = options;
     return {
-      method: "GET",
-      gzip: true,
-      headers: {
-        accept: "text/html",
-        "accept-encoding": "gzip",
-      },
-      uri:
+      req:
         "https://www.amazon.com/gp/css/shiptrack/view.html" +
         "/ref=pe_385040_121528360_TE_SIMP_typ?ie=UTF8" +
         `&orderID=${orderID}` +
         `&orderingShipmentId=${orderingShipmentId}` +
         "&packageId=1",
+      opts: {
+        method: "GET",
+        compress: true,
+        headers: {
+          accept: "text/html",
+          "accept-encoding": "gzip",
+        },
+      },
     };
   }
 }
