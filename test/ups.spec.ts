@@ -62,18 +62,21 @@ describe("ups client", () => {
 
     it("includes an AccessRequest in the track request", (done) =>
       _xmlParser.parseString(_xmlDocs[1], function (err, doc) {
+        handleError(err);
         expect(doc).toHaveProperty("AccessRequest");
         return done();
       }));
 
     it("includes a TrackRequest in the track request", (done) =>
       _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+        handleError(err);
         expect(doc).toHaveProperty("TrackRequest");
         return done();
       }));
 
     it("includes an AccessRequest with license number, user id and password", (done) =>
       _xmlParser.parseString(_xmlDocs[1], function (err, doc) {
+        handleError(err);
         const accessReq = doc.AccessRequest;
         expect(accessReq).toHaveProperty("AccessLicenseNumber");
         expect(accessReq).toHaveProperty("UserId");
@@ -86,6 +89,7 @@ describe("ups client", () => {
 
     it("includes a TrackRequest with customer context", (done) =>
       _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+        handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq).toHaveProperty("Request");
         expect(
@@ -96,6 +100,7 @@ describe("ups client", () => {
 
     it("includes a TrackRequest with request action and option", (done) =>
       _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+        handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq).toHaveProperty("Request");
         expect(trackReq.Request[0].RequestAction[0]).toBe("track");
@@ -105,6 +110,7 @@ describe("ups client", () => {
 
     it("includes a TrackRequest with the correct tracking number", (done) =>
       _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+        handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq.TrackingNumber[0]).toBe("1Z5678");
         return done();
@@ -511,19 +517,24 @@ describe("ups client", () => {
 
     describe("delivered package", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/ups_delivered.xml", "utf8", (err, xmlDoc) =>
-          _upsClient
-            .presentResponse(xmlDoc, "1Z12345E0291980793")
-            .then(({ err, presentedResponse: resp }) => {
-              expect(err).toBeFalsy();
-              _package = resp;
-              return done();
-            })
+        fs.readFile(
+          "test/stub_data/ups_delivered.xml",
+          "utf8",
+          (err, xmlDoc) => {
+            handleError(err);
+            _upsClient
+              .presentResponse(xmlDoc, { trackingNumber: "1Z12345E0291980793" })
+              .then(({ err, presentedResponse: resp }) => {
+                expect(err).toBeFalsy();
+                _package = resp;
+                return done();
+              }, handleError);
+          }
         )
       );
 
       it("returns the original tracking number", () =>
-        expect(_package.request).toBe("1Z12345E0291980793"));
+        expect(_package.request.trackingNumber).toBe("1Z12345E0291980793"));
 
       it("has a status of delivered", () =>
         expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
@@ -558,15 +569,16 @@ describe("ups client", () => {
 
     describe("package in transit", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/ups_transit.xml", "utf8", (err, xmlDoc) =>
+        fs.readFile("test/stub_data/ups_transit.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
           _upsClient
-            .presentResponse(xmlDoc, "trk")
+            .presentResponse(xmlDoc, { trackingNumber: "trk" })
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
-        )
+            }, handleError);
+        })
       );
 
       it("has a status of in-transit", () =>
@@ -596,14 +608,16 @@ describe("ups client", () => {
         fs.readFile(
           "test/stub_data/ups_delivery_attempt.xml",
           "utf8",
-          (err, xmlDoc) =>
+          (err, xmlDoc) => {
+            handleError(err);
             _upsClient
-              .presentResponse(xmlDoc, "trk")
+              .presentResponse(xmlDoc, { trackingNumber: "trk" })
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -643,14 +657,16 @@ describe("ups client", () => {
         fs.readFile(
           "test/stub_data/ups_rescheduled.xml",
           "utf8",
-          (err, xmlDoc) =>
+          (err, xmlDoc) => {
+            handleError(err);
             _upsClient
-              .presentResponse(xmlDoc, "trk")
+              .presentResponse(xmlDoc, { trackingNumber: "trk" })
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 
@@ -669,14 +685,16 @@ describe("ups client", () => {
         fs.readFile(
           "test/stub_data/ups_2nd_trk_number.xml",
           "utf8",
-          (err, xmlDoc) =>
+          (err, xmlDoc) => {
+            handleError(err);
             _upsClient
-              .presentResponse(xmlDoc, "trk")
+              .presentResponse(xmlDoc, { trackingNumber: "trk" })
               .then(({ err: respErr, presentedResponse: resp }) => {
                 expect(respErr).toBeFalsy();
                 _package = resp;
                 return done();
-              })
+              }, handleError);
+          }
         )
       );
 

@@ -6,6 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import moment from "moment-timezone";
 /* eslint-disable
@@ -42,7 +43,16 @@ interface IUpsClientOptions extends IShipperClientOptions {
   licenseNumber: string;
 }
 
-class UpsClient extends ShipperClient {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IUpsShipment {}
+
+interface IUpsRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+  reference?: string;
+  test?: boolean;
+}
+
+class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["D", STATUS_TYPES.DELIVERED],
     ["P", STATUS_TYPES.EN_ROUTE],
@@ -103,7 +113,9 @@ class UpsClient extends ShipperClient {
     return `${accessRequest}${trackRequest}`;
   }
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<IUpsShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<any>((resolve, reject) => {
@@ -276,12 +288,16 @@ class UpsClient extends ShipperClient {
     return { activities, status };
   }
 
-  requestOptions({ trackingNumber, reference, test }) {
+  requestOptions({
+    trackingNumber,
+    reference,
+    test,
+  }: IUpsRequestOptions): AxiosRequestConfig {
     const hostname = test ? "wwwcie.ups.com" : "onlinetools.ups.com";
     return {
       method: "POST",
-      uri: `https://${hostname}/ups.app/xml/Track`,
-      body: this.generateRequest(trackingNumber, reference),
+      url: `https://${hostname}/ups.app/xml/Track`,
+      data: this.generateRequest(trackingNumber, reference),
     };
   }
 }
