@@ -6,6 +6,7 @@
 	@typescript-eslint/no-unsafe-call,
 	node/no-callback-literal
 */
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 /* eslint-disable
     constructor-super,
@@ -39,7 +40,16 @@ interface IDhlClientOptions extends IShipperClientOptions {
   password: string;
 }
 
-class DhlClient extends ShipperClient {
+interface IDhlShipment {
+  $: cheerio.Root;
+  response: any;
+}
+
+interface IDhlRequestOptions extends IShipperClientOptions {
+  trackingNumber: string;
+}
+
+class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["AD", STATUS_TYPES.EN_ROUTE],
     ["AF", STATUS_TYPES.EN_ROUTE],
@@ -102,7 +112,7 @@ class DhlClient extends ShipperClient {
     this.parser = new Parser();
   }
 
-  generateRequest(trk) {
+  generateRequest(trk): string {
     return `\
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <req:KnownTrackingRequest xmlns:req="http://www.dhl.com">
@@ -119,7 +129,9 @@ class DhlClient extends ShipperClient {
 `;
   }
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(
+    response: any
+  ): Promise<IShipperResponse<IDhlShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<any>((resolve, reject) => {
@@ -286,11 +298,12 @@ class DhlClient extends ShipperClient {
     return this.presentAddress(destination);
   }
 
-  requestOptions({ trackingNumber }) {
+  requestOptions(options: IDhlRequestOptions): AxiosRequestConfig {
+    const { trackingNumber } = options;
     return {
       method: "POST",
-      uri: "http://xmlpi-ea.dhl.com/XMLShippingServlet",
-      body: this.generateRequest(trackingNumber),
+      url: "http://xmlpi-ea.dhl.com/XMLShippingServlet",
+      data: this.generateRequest(trackingNumber),
     };
   }
 }

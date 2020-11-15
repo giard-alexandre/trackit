@@ -27,7 +27,6 @@
 import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
-import { RequestInfo, RequestInit } from "node-fetch";
 import {
   IShipperClientOptions,
   IShipperResponse,

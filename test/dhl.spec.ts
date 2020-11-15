@@ -64,15 +64,16 @@ describe("dhl client", () => {
 
     describe("delivered package", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/dhl_delivered.xml", "utf8", (err, doc) =>
+        fs.readFile("test/stub_data/dhl_delivered.xml", "utf8", (err, doc) => {
+          handleError(err);
           _dhlClient
             .presentResponse(doc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
-        )
+            }, handleError);
+        })
       );
 
       it("has a status of delivered", () =>
@@ -99,15 +100,16 @@ describe("dhl client", () => {
 
     describe("delayed package", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/dhl_delayed.xml", "utf8", (err, doc) =>
+        fs.readFile("test/stub_data/dhl_delayed.xml", "utf8", (err, doc) => {
+          handleError(err);
           _dhlClient
             .presentResponse(doc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
-        )
+            }, handleError);
+        })
       );
 
       it("has a status of delayed", () =>
@@ -134,15 +136,16 @@ describe("dhl client", () => {
 
     describe("package with estimated delivery", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/dhl_eta.xml", "utf8", (err, doc) =>
+        fs.readFile("test/stub_data/dhl_eta.xml", "utf8", (err, doc) => {
+          handleError(err);
           _dhlClient
             .presentResponse(doc, "trk")
             .then(({ err: respErr, presentedResponse: resp }) => {
               expect(respErr).toBeFalsy();
               _package = resp;
               return done();
-            })
-        )
+            }, handleError);
+        })
       );
 
       it("has an estimated delivery date", () =>

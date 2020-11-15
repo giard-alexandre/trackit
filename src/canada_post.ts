@@ -7,7 +7,6 @@
 */
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { RequestInfo, RequestInit } from "node-fetch";
 /* eslint-disable
 	@typescript-eslint/restrict-template-expressions,
 	@typescript-eslint/no-unsafe-member-access,

@@ -8,7 +8,6 @@
 */
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { RequestInfo, RequestInit } from "node-fetch";
 // TODO: This file was created by bulk-decaffeinate.
 // Fix any style issues and re-enable lint.
 /*
