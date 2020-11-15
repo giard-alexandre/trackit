@@ -53,7 +53,8 @@ module.exports = {
 					"match": true
 				}
 			}
-		]
+		],
+		"@typescript-eslint/no-unused-vars": ["warn", {"args": "after-used", "argsIgnorePattern": "_"}]
     },
     "settings": {}
 };

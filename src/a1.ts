@@ -9,7 +9,7 @@
 // TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { Parser } from "xml2js";
+import { convertableToString, Parser } from "xml2js";
 import {
   IActivity,
   IShipperClientOptions,
@@ -60,7 +60,9 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     this.parser = new Parser();
   }
 
-  async validateResponse(response): Promise<IShipperResponse<IA1Shipment>> {
+  async validateResponse(
+    response: string
+  ): Promise<IShipperResponse<IA1Shipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<any>((resolve, reject) => {
@@ -173,15 +175,15 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     ).toDate();
   }
 
-  getService(shipment: IA1Shipment): null {
+  getService(_: IA1Shipment): null {
     return null;
   }
 
-  getWeight(shipment: IA1Shipment): null {
+  getWeight(_: IA1Shipment): null {
     return null;
   }
 
-  getDestination(shipment: IA1Shipment) {
+  getDestination(shipment: IA1Shipment): string {
     return this.presentAddress(shipment?.PackageDestinationLocation?.[0]);
   }
 
