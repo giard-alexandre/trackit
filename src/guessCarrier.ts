@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-regexp-exec */
 // TODO: This file was created by bulk-decaffeinate.
 import { upperCase } from "change-case";
-import { uniq } from "underscore";
 import { CheckDigit } from "./checkdigit";
 
 function _preprocess(trk: string): string {
@@ -219,6 +218,5 @@ export default (trk: string): string[] => {
     return true;
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-  return uniq<string[]>(carriers);
+  return [...new Set(carriers)];
 };
