@@ -171,13 +171,19 @@ export class FedexClient extends ShipperClient<
     try {
       const trackResult = await new Promise<IFedexTrackResult>(
         (resolve, reject) => {
-          this.parser.parseString(response, (xmlErr, trackResult) => {
-            if (xmlErr) {
-              reject(xmlErr);
-            } else {
-              resolve(trackResult);
+          this.parser.parseString(
+            response,
+            (
+              xmlErr: Error,
+              trackResult: IFedexTrackResult | PromiseLike<IFedexTrackResult>
+            ) => {
+              if (xmlErr) {
+                reject(xmlErr);
+              } else {
+                resolve(trackResult);
+              }
             }
-          });
+          );
         }
       );
 
