@@ -1,6 +1,5 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { find } from "underscore";
 import { Builder, Parser } from "xml2js";
 import {
   IShipmentActivities,
