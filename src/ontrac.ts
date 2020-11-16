@@ -1,31 +1,6 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+// TODO: Fix any style issues and re-enable lint.
 import { load } from "cheerio";
 import moment from "moment-timezone";
 import {
@@ -36,40 +11,40 @@ import {
   STATUS_TYPES,
 } from "./shipper";
 
-const LOCATION_STATES = {
-  Ontario: "CA",
-  Bakersfield: "CA",
-  Denver: "CO",
-  Vancouver: "WA",
-  Orange: "CA",
-  Hayward: "CA",
-  Phoenix: "AZ",
-  Sacramento: "CA",
-  Vegas: "NV",
-  "Los Angeles": "CA",
-  "Santa Maria": "CA",
-  Eugene: "OR",
-  Commerce: "CA",
-  "Kettleman City": "CA",
-  "Menlo Park": "CA",
-  "San Jose": "CA",
-  Burbank: "CA",
-  Ventura: "CA",
-  Petaluma: "CA",
-  Corporate: "CA",
-  Medford: "OR",
-  Monterey: "CA",
-  "San Francisco": "CA",
-  Stockton: "CA",
-  "San Diego": "CA",
-  Fresno: "CA",
-  "Salt Lake": "UT",
-  SaltLake: "UT",
-  Concord: "CA",
-  Tucson: "AZ",
-  Reno: "NV",
-  Seattle: "WA",
-};
+const LOCATION_STATES: Map<string, string> = new Map([
+  ["Ontario", "CA"],
+  ["Bakersfield", "CA"],
+  ["Denver", "CO"],
+  ["Vancouver", "WA"],
+  ["Orange", "CA"],
+  ["Hayward", "CA"],
+  ["Phoenix", "AZ"],
+  ["Sacramento", "CA"],
+  ["Vegas", "NV"],
+  ["Los Angeles", "CA"],
+  ["Santa Maria", "CA"],
+  ["Eugene", "OR"],
+  ["Commerce", "CA"],
+  ["Kettleman City", "CA"],
+  ["Menlo Park", "CA"],
+  ["San Jose", "CA"],
+  ["Burbank", "CA"],
+  ["Ventura", "CA"],
+  ["Petaluma", "CA"],
+  ["Corporate", "CA"],
+  ["Medford", "OR"],
+  ["Monterey", "CA"],
+  ["San Francisco", "CA"],
+  ["Stockton", "CA"],
+  ["San Diego", "CA"],
+  ["Fresno", "CA"],
+  ["Salt Lake", "UT"],
+  ["SaltLake", "UT"],
+  ["Concord", "CA"],
+  ["Tucson", "AZ"],
+  ["Reno", "NV"],
+  ["Seattle", "WA"],
+]);
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IOnTracShipment {}
@@ -98,7 +73,7 @@ class OnTracClient extends ShipperClient<
   }
 
   extractSummaryField(shipment: cheerio.Root, regex: RegExp): string {
-    let value = null;
+    let value: string = null;
     const $ = shipment;
     if ($ == null) {
       return;
@@ -139,7 +114,7 @@ class OnTracClient extends ShipperClient<
   }
 
   presentAddress(location: string): string {
-    const addressState = LOCATION_STATES[location];
+    const addressState = LOCATION_STATES.get(location);
     if (addressState != null) {
       return `${location}, ${addressState}`;
     } else {
@@ -183,7 +158,7 @@ class OnTracClient extends ShipperClient<
         if (!(rowIndex > 0)) {
           return;
         }
-        const fields = [];
+        const fields: string[] = [];
         $(row)
           .find("td")
           .each((_, col) => fields.push($(col).text().trim()));
