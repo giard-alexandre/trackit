@@ -113,7 +113,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
   }
 
   findStatusFromMap(statusText: string): STATUS_TYPES {
-    let status = STATUS_TYPES.UNKNOWN;
+    let status: STATUS_TYPES = null;
     if (statusText && statusText.length > 0) {
       for (const [key, value] of this.STATUS_MAP) {
         if (statusText?.toLowerCase().includes(key?.toLowerCase())) {
@@ -130,7 +130,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
   }
 
   getActivitiesAndStatus(data: cheerio.Root): IShipmentActivities {
-    let status: STATUS_TYPES = STATUS_TYPES.UNKNOWN;
+    let status: STATUS_TYPES = null;
     const activities = [];
     if (data == null) {
       return { activities, status };
