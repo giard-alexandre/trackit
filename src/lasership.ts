@@ -1,19 +1,3 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-*/
-// TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import {
@@ -71,13 +55,13 @@ class LasershipClient extends ShipperClient<
     responseString: string
   ): Promise<IShipperResponse<ILasershipShipment>> {
     try {
-      const response = JSON.parse(responseString);
+      const response = JSON.parse(responseString) as ILasershipShipment;
       if (response.Events == null) {
         return Promise.resolve({ err: new Error("missing events") });
       }
       return Promise.resolve({ shipment: response });
     } catch (error) {
-      return Promise.resolve({ err: error });
+      return Promise.resolve({ err: new Error(error) });
     }
   }
 
@@ -102,7 +86,7 @@ class LasershipClient extends ShipperClient<
 
   getActivitiesAndStatus(shipment: ILasershipShipment): IShipmentActivities {
     const activities = [];
-    let status = null;
+    let status: STATUS_TYPES = null;
     let rawActivities = shipment != null ? shipment.Events : undefined;
     rawActivities = Array.from(rawActivities || []);
     for (const rawActivity of rawActivities) {
