@@ -8,26 +8,7 @@
 */
 import { AxiosRequestConfig } from "axios";
 import { upperCaseFirst } from "change-case";
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-return-assign,
-    no-this-before-super,
-    no-unused-vars,
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+// TODO: Fix any style issues and re-enable lint.
 import { load } from "cheerio";
 import moment from "moment-timezone";
 import {
@@ -61,7 +42,9 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     ["delivered", STATUS_TYPES.DELIVERED],
   ]);
 
-  validateResponse(response: any): Promise<IShipperResponse<IDhlgmShipment>> {
+  validateResponse(
+    response: string
+  ): Promise<IShipperResponse<IDhlgmShipment>> {
     try {
       response = response.replace(/<br>/gi, " ");
       return Promise.resolve({
@@ -72,16 +55,15 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     }
   }
 
-  extractSummaryField(data, name): string {
+  extractSummaryField(data: cheerio.Root, regex: RegExp): string {
     if (data == null) {
       return;
     }
     const $ = data;
     let value: string;
-    const regex = new RegExp(name);
     $(".card-info > dl")
       .children()
-      .each((findex, field) => {
+      .each((_, field) => {
         if (regex.test($(field).text())) {
           value = $(field)?.next()?.text()?.trim();
         }
@@ -92,22 +74,21 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     return value;
   }
 
-  extractHeaderField(data, name) {
+  extractHeaderField(data: cheerio.Root, regex: RegExp): string {
     if (data == null) {
       return;
     }
     const $ = data;
-    let value;
-    const regex = new RegExp(name);
+    let value: string;
     $(".card > .row")
       .children()
-      .each((findex, field) => {
+      .each((_, field) => {
         $(field)
           .children()
-          .each((cindex, col) =>
+          .each((_, col) =>
             $(col)
               .find("dt")
-              .each(function (dindex, element) {
+              .each((_, element) => {
                 if (regex.test($(element).text())) {
                   return (value = $(element)?.next()?.text()?.trim());
                 }
@@ -120,7 +101,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     return value;
   }
 
-  getEta(data) {
+  getEta(data: cheerio.Root): Date {
     if (data == null) {
       return;
     }
@@ -132,15 +113,15 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     return moment(new Date(`${eta} 23:59:59 +00:00`)).toDate();
   }
 
-  getService(data) {
-    return this.extractSummaryField(data, "Service");
+  getService(data: cheerio.Root): string {
+    return this.extractSummaryField(data, /Service/);
   }
 
-  getWeight(data) {
-    return this.extractSummaryField(data, "Weight");
+  getWeight(data: cheerio.Root): string {
+    return this.extractSummaryField(data, /Weight/);
   }
 
-  findStatusFromMap(statusText) {
+  findStatusFromMap(statusText: string): STATUS_TYPES {
     let status = STATUS_TYPES.UNKNOWN;
     if (statusText && statusText.length > 0) {
       for (const [key, value] of this.STATUS_MAP) {
@@ -153,11 +134,11 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     return status;
   }
 
-  presentStatus(details) {
+  presentStatus(details: string): STATUS_TYPES {
     return this.findStatusFromMap(details);
   }
 
-  getActivitiesAndStatus(data): IShipmentActivities {
+  getActivitiesAndStatus(data: cheerio.Root): IShipmentActivities {
     let status = null;
     const activities = [];
     if (data == null) {
@@ -171,7 +152,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
         currentDate = row.text();
       }
       if (row.hasClass("timeline-event")) {
-        let timestamp;
+        let timestamp: Date;
         let currentTime = row.find(".timeline-time").text();
         if (currentTime != null ? currentTime.length : undefined) {
           if (currentTime != null ? currentTime.length : undefined) {
@@ -187,7 +168,10 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
         if (location != null ? location.length : undefined) {
           location = upperCaseFirst(location);
         }
-        const details = row?.find(".timeline-description")?.text()?.trim();
+        const details: string = row
+          ?.find(".timeline-description")
+          ?.text()
+          ?.trim();
         if (details != null && timestamp != null) {
           if (status == null) {
             status = this.presentStatus(details);
@@ -199,8 +183,8 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     return { activities, status };
   }
 
-  getDestination(data) {
-    return this.extractHeaderField(data, "To:");
+  getDestination(data: cheerio.Root): string {
+    return this.extractHeaderField(data, /To:/);
   }
 
   requestOptions(options: IDhlgmRequestOptions): AxiosRequestConfig {
