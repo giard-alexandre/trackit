@@ -1,11 +1,3 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { find } from "underscore";
@@ -18,6 +10,13 @@ import {
   STATUS_TYPES,
 } from "./shipper";
 
+interface IFedexAddress {
+  City: string[];
+  StateOrProvinceCode: string[];
+  CountryCode: string[];
+  PostalCode: string[];
+}
+
 interface IFedexClientOptions extends IShipperClientOptions {
   account: string;
   password: string;
@@ -25,8 +24,32 @@ interface IFedexClientOptions extends IShipperClientOptions {
   meter: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IFedexShipment {}
+interface IFedexShipment {
+  StatusCode: string[];
+  DestinationAddress: IFedexAddress[];
+  EstimatedDeliveryTimestamp: string[];
+  ServiceInfo: string[];
+  PackageWeight: {
+    Units: string[];
+    Value: number[];
+  }[];
+  Events: {
+    Address: IFedexAddress[];
+    Timestamp: string[];
+    EventDescription: string[];
+  }[];
+}
+
+interface IFedexNotification {
+  Code: string[];
+}
+
+interface IFedexTrackResult {
+  TrackReply: {
+    Notifications: IFedexNotification[];
+    TrackDetails: IFedexShipment[];
+  };
+}
 
 interface IFedexRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
@@ -101,7 +124,7 @@ export class FedexClient extends ShipperClient<
     this.builder = new Builder({ renderOpts: { pretty: false } });
   }
 
-  generateRequest(trk, reference) {
+  generateRequest(trk: string, reference: string): string {
     if (reference == null) {
       reference = "n/a";
     }
@@ -142,19 +165,21 @@ export class FedexClient extends ShipperClient<
   }
 
   async validateResponse(
-    response: any
+    response: string
   ): Promise<IShipperResponse<IFedexShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
-        this.parser.parseString(response, (xmlErr, trackResult) => {
-          if (xmlErr) {
-            reject(xmlErr);
-          } else {
-            resolve(trackResult);
-          }
-        });
-      });
+      const trackResult = await new Promise<IFedexTrackResult>(
+        (resolve, reject) => {
+          this.parser.parseString(response, (xmlErr, trackResult) => {
+            if (xmlErr) {
+              reject(xmlErr);
+            } else {
+              resolve(trackResult);
+            }
+          });
+        }
+      );
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
@@ -163,20 +188,17 @@ export class FedexClient extends ShipperClient<
         trackResult.TrackReply != null
           ? trackResult.TrackReply.Notifications
           : undefined;
-      const success = find<any>(
-        notifications,
-        (notice) => notice?.Code?.[0] === "0"
-      );
+      const success = notifications.find((notif) => notif?.Code?.[0] === "0");
       if (!success) {
-        return { err: new Error(notifications || "invalid reply") };
+        return { err: new Error(notifications.toString() || "invalid reply") };
       }
       return { shipment: trackResult?.TrackReply?.TrackDetails?.[0] };
     } catch (e) {
-      return { err: e };
+      return { err: new Error(e) };
     }
   }
 
-  presentAddress(address) {
+  presentAddress(address: IFedexAddress): string {
     if (address == null) {
       return;
     }
@@ -200,7 +222,7 @@ export class FedexClient extends ShipperClient<
     });
   }
 
-  getStatus(shipment) {
+  getStatus(shipment: IFedexShipment): STATUS_TYPES {
     const statusCode = shipment?.StatusCode?.[0];
     if (statusCode == null) {
       return;
@@ -210,10 +232,10 @@ export class FedexClient extends ShipperClient<
       : STATUS_TYPES.UNKNOWN;
   }
 
-  getActivitiesAndStatus(shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IFedexShipment): IShipmentActivities {
     const activities = [];
     for (const rawActivity of shipment?.Events || []) {
-      let datetime, timestamp;
+      let datetime: string, timestamp: Date;
       const location = this.presentAddress(
         rawActivity.Address != null ? rawActivity.Address[0] : undefined
       );
@@ -236,7 +258,7 @@ export class FedexClient extends ShipperClient<
     return { activities, status: this.getStatus(shipment) };
   }
 
-  getEta(shipment) {
+  getEta(shipment: IFedexShipment): Date {
     const ts = shipment?.EstimatedDeliveryTimestamp?.[0];
     if (ts == null) {
       return;
@@ -244,11 +266,11 @@ export class FedexClient extends ShipperClient<
     return moment(`${ts.slice(0, 19)}Z`).toDate();
   }
 
-  getService(shipment) {
+  getService(shipment: IFedexShipment): string {
     return shipment?.ServiceInfo ? shipment?.ServiceInfo[0] : undefined;
   }
 
-  getWeight(shipment) {
+  getWeight(shipment: IFedexShipment): string {
     const weightData = shipment?.PackageWeight?.[0];
     if (weightData == null) {
       return;
@@ -260,7 +282,7 @@ export class FedexClient extends ShipperClient<
     }
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IFedexShipment): string {
     return this.presentAddress(
       shipment.DestinationAddress != null
         ? shipment.DestinationAddress[0]
