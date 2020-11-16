@@ -1,21 +1,5 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars
-*/
-// TODO: Fix any style issues and re-enable lint.
 import { Parser } from "xml2js";
 import {
   IShipmentActivities,
@@ -60,7 +44,7 @@ interface IDhlResponse {
     AWBInfo: {
       ShipmentInfo: IDhlShipment[];
       Status: { ActionStatus: string }[];
-    };
+    }[];
   };
 }
 
@@ -186,7 +170,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
       }
       return { shipment: shipment };
     } catch (e) {
-      return { err: e };
+      return { err: new Error(e) };
     }
   }
 
@@ -269,7 +253,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
 
   getActivitiesAndStatus(shipment: IDhlShipment): IShipmentActivities {
     const activities = [];
-    let status = null;
+    let status = STATUS_TYPES.UNKNOWN;
     let rawActivities: IDhlRawActivity[] = shipment.ShipmentEvent;
     if (rawActivities == null) {
       rawActivities = [];
