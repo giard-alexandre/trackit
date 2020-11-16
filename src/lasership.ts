@@ -13,18 +13,7 @@
     no-this-before-super,
     no-unused-vars,
 */
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+// TODO: Fix any style issues and re-enable lint.
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import {
@@ -35,8 +24,30 @@ import {
   STATUS_TYPES,
 } from "./shipper";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface ILasershipShipment {}
+interface ILasershipAddress {
+  City: string;
+  State: string;
+  PostalCode: string;
+  Country: string;
+}
+
+interface ILasershipRawActivity extends ILasershipAddress {
+  DateTime: string;
+  EventShortText: string;
+  EventType: string;
+}
+
+interface ILasershipShipmentPiece {
+  Weight: number;
+  WeightUnit: string;
+}
+
+interface ILasershipShipment {
+  Destination: ILasershipAddress;
+  Events: ILasershipRawActivity[];
+  EstimatedDeliveryDate: string;
+  Pieces: ILasershipShipmentPiece[];
+}
 
 interface ILasershipRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
@@ -57,10 +68,10 @@ class LasershipClient extends ShipperClient<
   ]);
 
   validateResponse(
-    response: any
+    responseString: string
   ): Promise<IShipperResponse<ILasershipShipment>> {
     try {
-      response = JSON.parse(response);
+      const response = JSON.parse(responseString);
       if (response.Events == null) {
         return Promise.resolve({ err: new Error("missing events") });
       }
@@ -70,7 +81,7 @@ class LasershipClient extends ShipperClient<
     }
   }
 
-  presentAddress(address) {
+  presentAddress(address: ILasershipAddress): string {
     const city = address.City;
     const stateCode = address.State;
     const postalCode = address.PostalCode;
@@ -83,19 +94,19 @@ class LasershipClient extends ShipperClient<
     });
   }
 
-  presentStatus(eventType) {
+  presentStatus(eventType: string): STATUS_TYPES {
     if (eventType != null) {
       return this.STATUS_MAP.get(eventType);
     }
   }
 
-  getActivitiesAndStatus(shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: ILasershipShipment): IShipmentActivities {
     const activities = [];
     let status = null;
     let rawActivities = shipment != null ? shipment.Events : undefined;
     rawActivities = Array.from(rawActivities || []);
     for (const rawActivity of rawActivities) {
-      let timestamp;
+      let timestamp: Date;
       const location = this.presentAddress(rawActivity);
       const dateTime = rawActivity != null ? rawActivity.DateTime : undefined;
       if (dateTime != null) {
@@ -116,7 +127,7 @@ class LasershipClient extends ShipperClient<
     return { activities, status };
   }
 
-  getEta(shipment) {
+  getEta(shipment: ILasershipShipment): Date {
     if (
       (shipment != null ? shipment.EstimatedDeliveryDate : undefined) == null
     ) {
@@ -125,11 +136,11 @@ class LasershipClient extends ShipperClient<
     return moment(`${shipment.EstimatedDeliveryDate}T00:00:00Z`).toDate();
   }
 
-  getService() {
+  getService(): undefined {
     return undefined;
   }
 
-  getWeight(shipment) {
+  getWeight(shipment: ILasershipShipment): string {
     if (!shipment?.Pieces?.length) {
       return;
     }
@@ -142,7 +153,7 @@ class LasershipClient extends ShipperClient<
     return weight;
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: ILasershipShipment): string {
     const destination = shipment != null ? shipment.Destination : undefined;
     if (destination == null) {
       return;

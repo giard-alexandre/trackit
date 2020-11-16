@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/prefer-regexp-exec */
-// TODO: This file was created by bulk-decaffeinate.
 import { upperCase } from "change-case";
 import { CheckDigit } from "./checkdigit";
 
