@@ -1,33 +1,5 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-import { reduce } from "underscore";
 import {
   IShipmentActivities,
   IShipperClientOptions,
@@ -83,7 +55,7 @@ class PrestigeClient extends ShipperClient<
   async validateResponse(
     responseString: string
   ): Promise<IShipperResponse<IPrestigeShipment>> {
-    const responseArray: IPrestigeShipment[] = JSON.parse(responseString);
+    const responseArray = JSON.parse(responseString) as IPrestigeShipment[];
     if (!(responseArray != null ? responseArray.length : undefined)) {
       return await Promise.resolve({
         err: new Error("no tracking info found"),
@@ -102,6 +74,7 @@ class PrestigeClient extends ShipperClient<
     }
     const address: { [key: string]: string } = {};
     ADDR_ATTRS.forEach((attr) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       address[attr] = event[`${prefix}${attr}`];
     });
     const city = address.City;
@@ -136,7 +109,7 @@ class PrestigeClient extends ShipperClient<
 
   getActivitiesAndStatus(shipment: IPrestigeShipment): IShipmentActivities {
     const activities = [];
-    let status = null;
+    let status: STATUS_TYPES = null;
     const rawActivities =
       shipment != null ? shipment.TrackingEventHistory : undefined;
     for (const rawActivity of rawActivities || []) {

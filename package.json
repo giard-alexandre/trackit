@@ -19,7 +19,6 @@
     "date-fns": "^2.16.1",
     "date-fns-tz": "^1.0.12",
     "moment-timezone": "0.5.x",
-    "underscore": "1.9.x",
     "xml2js": "0.4.x"
   },
   "devDependencies": {
@@ -27,7 +26,6 @@
     "@types/jest": "^26.0.15",
     "@types/moment-timezone": "^0.5.13",
     "@types/node": "^13.13.0",
-    "@types/underscore": "^1.10.24",
     "@types/xml2js": "^0.4.5",
     "@typescript-eslint/eslint-plugin": "^4.6.1",
     "@typescript-eslint/parser": "^4.6.1",
