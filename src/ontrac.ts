@@ -91,20 +91,19 @@ class OnTracClient extends ShipperClient<
   ]);
 
   async validateResponse(
-    response: any
+    response: string
   ): Promise<IShipperResponse<IOnTracShipment>> {
     const data = load(response, { normalizeWhitespace: true });
     return Promise.resolve({ shipment: data });
   }
 
-  extractSummaryField(shipment, name) {
+  extractSummaryField(shipment: cheerio.Root, regex: RegExp): string {
     let value = null;
     const $ = shipment;
     if ($ == null) {
       return;
     }
-    $('td[bgcolor="#ffd204"]').each(function (index, element) {
-      const regex = new RegExp(name);
+    $('td[bgcolor="#ffd204"]').each((_, element) => {
       if (!regex.test($(element).text())) {
         return;
       }
@@ -115,31 +114,31 @@ class OnTracClient extends ShipperClient<
     return value;
   }
 
-  getEta(shipment) {
-    let eta = this.extractSummaryField(shipment, "Service Commitment");
+  getEta(shipment: cheerio.Root): Date {
+    let eta = this.extractSummaryField(shipment, /Service Commitment/);
     if (eta == null) {
       return;
     }
-    const regexMatch = eta.match("(.*) by (.*)");
+    const regexMatch = /(.*) by (.*)/.exec(eta);
     if ((regexMatch != null ? regexMatch.length : undefined) > 1) {
       eta = `${regexMatch[1]} 23:59:59 +00:00`;
     }
     return new Date(eta);
   }
 
-  getService(shipment) {
-    const service = this.extractSummaryField(shipment, "Service Code");
+  getService(shipment: cheerio.Root): string {
+    const service = this.extractSummaryField(shipment, /Service Code/);
     if (service == null) {
       return;
     }
     return titleCase(service);
   }
 
-  getWeight(shipment) {
-    return this.extractSummaryField(shipment, "Weight");
+  getWeight(shipment: cheerio.Root): string {
+    return this.extractSummaryField(shipment, /Weight/);
   }
 
-  presentAddress(location) {
+  presentAddress(location: string): string {
     const addressState = LOCATION_STATES[location];
     if (addressState != null) {
       return `${location}, ${addressState}`;
@@ -148,7 +147,7 @@ class OnTracClient extends ShipperClient<
     }
   }
 
-  presentStatus(status) {
+  presentStatus(status: string): STATUS_TYPES {
     status = status?.replace("DETAILS", "")?.trim();
     if (!(status != null ? status.length : undefined)) {
       return STATUS_TYPES.UNKNOWN;
@@ -161,7 +160,7 @@ class OnTracClient extends ShipperClient<
     }
   }
 
-  presentTimestamp(ts) {
+  presentTimestamp(ts: string): Date {
     if (ts == null) {
       return;
     }
@@ -169,10 +168,10 @@ class OnTracClient extends ShipperClient<
     return moment(new Date(`${ts} +0000`)).toDate();
   }
 
-  getActivitiesAndStatus(shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: cheerio.Root): IShipmentActivities {
     const activities = [];
     const status = this.presentStatus(
-      this.extractSummaryField(shipment, "Delivery Status")
+      this.extractSummaryField(shipment, /Delivery Status/)
     );
     const $ = shipment;
     if ($ == null) {
@@ -187,9 +186,9 @@ class OnTracClient extends ShipperClient<
         const fields = [];
         $(row)
           .find("td")
-          .each((colIndex, col) => fields.push($(col).text().trim()));
+          .each((_, col) => fields.push($(col).text().trim()));
         if (fields.length) {
-          let details, location;
+          let details: string, location: string;
           if (fields[0].length) {
             details = upperCaseFirst(lowerCase(fields[0]));
           }
@@ -205,8 +204,8 @@ class OnTracClient extends ShipperClient<
     return { activities, status };
   }
 
-  getDestination(shipment: IOnTracShipment): string {
-    const destination = this.extractSummaryField(shipment, "Deliver To");
+  getDestination(shipment: cheerio.Root): string {
+    const destination = this.extractSummaryField(shipment, /Deliver To/);
     return this.presentLocationString(destination);
   }
 
