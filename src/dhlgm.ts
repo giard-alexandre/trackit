@@ -1,14 +1,5 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 import { AxiosRequestConfig } from "axios";
 import { upperCaseFirst } from "change-case";
-// TODO: Fix any style issues and re-enable lint.
 import { load } from "cheerio";
 import moment from "moment-timezone";
 import {
@@ -51,7 +42,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
         shipment: load(response, { normalizeWhitespace: true }),
       });
     } catch (error) {
-      return Promise.resolve({ err: error });
+      return Promise.resolve({ err: new Error(error) });
     }
   }
 
@@ -139,13 +130,13 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
   }
 
   getActivitiesAndStatus(data: cheerio.Root): IShipmentActivities {
-    let status = null;
+    let status: STATUS_TYPES = STATUS_TYPES.UNKNOWN;
     const activities = [];
     if (data == null) {
       return { activities, status };
     }
     const $ = data;
-    let currentDate = null;
+    let currentDate: string;
     for (const rowData of Array.from($(".timeline").children() || [])) {
       const row = $(rowData);
       if (row.hasClass("timeline-date")) {
