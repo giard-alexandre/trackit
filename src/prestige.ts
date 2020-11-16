@@ -36,8 +36,33 @@ import {
   STATUS_TYPES,
 } from "./shipper";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IPrestigeShipment {}
+interface IPrestigeRawActivity {
+  CountryCode: string;
+  ELCity: string;
+  ELState: string;
+  ELZip: string;
+  EstimatedDeliveryDate: string;
+  EventCode: string;
+  EventCodeDesc: string;
+  PDCity: string;
+  PDState: string;
+  PDZip: string;
+  SchdDateTime: string;
+  serverDate: string;
+  serverTime: string;
+  TrackingNumber: string;
+}
+
+interface IPrestigeShipmentPiece {
+  Weight: number;
+  WeightUnit: string;
+}
+
+interface IPrestigeShipment {
+  TrackingEventHistory: IPrestigeRawActivity[];
+  TrackingNumber: string;
+  Pieces?: IPrestigeShipmentPiece[];
+}
 
 interface IPrestigeRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
@@ -56,31 +81,29 @@ class PrestigeClient extends ShipperClient<
   ]);
 
   async validateResponse(
-    response: any
+    responseString: string
   ): Promise<IShipperResponse<IPrestigeShipment>> {
-    response = JSON.parse(response);
-    if (!(response != null ? response.length : undefined)) {
-      return Promise.resolve({ err: new Error("no tracking info found") });
+    const responseArray: IPrestigeShipment[] = JSON.parse(responseString);
+    if (!(responseArray != null ? responseArray.length : undefined)) {
+      return await Promise.resolve({
+        err: new Error("no tracking info found"),
+      });
     }
-    response = response[0];
+    const response = responseArray[0];
     if (response.TrackingEventHistory == null) {
-      return Promise.resolve({ err: new Error("missing events") });
+      return await Promise.resolve({ err: new Error("missing events") });
     }
-    return Promise.resolve({ shipment: response });
+    return await Promise.resolve({ shipment: response });
   }
 
-  presentAddress(prefix, event) {
+  presentAddress(prefix: string, event: IPrestigeRawActivity): string {
     if (event == null) {
       return;
     }
-    const address = reduce(
-      ADDR_ATTRS,
-      function (d, v) {
-        d[v] = event[`${prefix}${v}`];
-        return d;
-      },
-      {}
-    );
+    const address: { [key: string]: string } = {};
+    ADDR_ATTRS.forEach((attr) => {
+      address[attr] = event[`${prefix}${attr}`];
+    });
     const city = address.City;
     const stateCode = address.State;
     const postalCode = address.Zip;
@@ -92,7 +115,8 @@ class PrestigeClient extends ShipperClient<
     });
   }
 
-  presentStatus(eventType) {
+  presentStatus(eventType: string): STATUS_TYPES {
+    // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
     const codeStr = eventType?.match("EVENT_(.*)$")?.[1];
     if (!(codeStr != null ? codeStr.length : undefined)) {
       return;
@@ -110,14 +134,12 @@ class PrestigeClient extends ShipperClient<
     }
   }
 
-  getActivitiesAndStatus(shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IPrestigeShipment): IShipmentActivities {
     const activities = [];
     let status = null;
-    // TODO: remove all rawActivities weirdness with nullchecks
-    let rawActivities =
+    const rawActivities =
       shipment != null ? shipment.TrackingEventHistory : undefined;
-    rawActivities = Array.from(rawActivities || []);
-    for (const rawActivity of rawActivities) {
+    for (const rawActivity of rawActivities || []) {
       const location = this.presentAddress("EL", rawActivity);
       const dateTime = `${
         rawActivity != null ? rawActivity.serverDate : undefined
@@ -138,7 +160,7 @@ class PrestigeClient extends ShipperClient<
     return { activities, status };
   }
 
-  getEta(shipment) {
+  getEta(shipment: IPrestigeShipment): Date {
     let eta = shipment?.TrackingEventHistory?.[0]?.EstimatedDeliveryDate;
     if (!(eta != null ? eta.length : undefined)) {
       return;
@@ -147,11 +169,11 @@ class PrestigeClient extends ShipperClient<
     return moment(eta, "MM/DD/YYYY HH:mm ZZ").toDate();
   }
 
-  getService() {
+  getService(): undefined {
     return undefined;
   }
 
-  getWeight(shipment) {
+  getWeight(shipment: IPrestigeShipment): string {
     if (!shipment?.Pieces?.length) {
       return;
     }
@@ -164,7 +186,7 @@ class PrestigeClient extends ShipperClient<
     return weight;
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IPrestigeShipment): string {
     return this.presentAddress("PD", shipment?.TrackingEventHistory?.[0]);
   }
 
