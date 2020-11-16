@@ -194,12 +194,15 @@ describe("ups client", () => {
   describe("getEta", () => {
     let _presentTimestamp = null;
 
-    beforeEach(
-      () =>
-        (_presentTimestamp = bond(_upsClient, "presentTimestamp").return(
-          "at midnight"
-        ))
-    );
+    beforeEach(() => {
+      // TODO: replace bond with Jest mocks and use expect(blah).toBeCalledWith().
+      // _presentTimestamp = jest
+      //   .spyOn(_upsClient, "presentTimestamp")
+      //   .mockReturnValue(endOfDay(new Date()));
+      _presentTimestamp = bond(_upsClient, "presentTimestamp").return(
+        "at midnight"
+      );
+    });
 
     it("uses ScheduledDeliveryDate", () => {
       const shipment = { ScheduledDeliveryDate: ["tomorrow"] };
