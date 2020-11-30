@@ -1,34 +1,6 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import moment from "moment-timezone";
-/* eslint-disable
-    constructor-super,
-    no-cond-assign,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { Builder, Parser } from "xml2js";
 import {
   IShipmentActivities,
@@ -44,8 +16,69 @@ interface IUpsClientOptions extends IShipperClientOptions {
   licenseNumber: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IUpsShipment {}
+export interface IUpsLocation {
+  City: string[];
+  StateProvinceCode: string[];
+  CountryCode: string[];
+  PostalCode: string[];
+}
+
+export interface IUpsStatus {
+  StatusType?: {
+    Code?: string[];
+    Description?: string[];
+  }[];
+  StatusCode?: {
+    Code?: string[];
+  }[];
+}
+
+interface IUpsShipmentActivity {
+  ActivityLocation: { Address: IUpsLocation[] }[];
+  Date: string[];
+  Time: string[];
+  Status: IUpsStatus[];
+}
+
+export interface IUpsShipment {
+  Package?: {
+    RescheduledDeliveryDate?: string[];
+    PackageWeight?: {
+      UnitOfMeasurement?: {
+        Code?: string[];
+      }[];
+      Weight?: string[];
+    }[];
+    Activity?: IUpsShipmentActivity[];
+  }[];
+  ShipTo?: {
+    Address?: IUpsLocation[];
+  }[];
+  ScheduledDeliveryDate?: string[];
+  Service?: {
+    Description: string[];
+  }[];
+}
+
+export interface IUpsActivity {
+  statusType?: string;
+  statusCode?: string;
+  timestamp: Date;
+  location: string;
+  details: string;
+}
+
+interface IUpsTrackResult {
+  TrackResponse: {
+    Response: {
+      ResponseStatusDescription: string;
+      Error: {
+        ErrorDescription: string[];
+      }[];
+    }[];
+    Shipment: IUpsShipment[];
+  };
+}
 
 interface IUpsRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
@@ -88,7 +121,7 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     this.builder = new Builder({ renderOpts: { pretty: false } });
   }
 
-  generateRequest(trk, reference) {
+  generateRequest(trk: string, reference: string): string {
     if (reference == null) {
       reference = "n/a";
     }
@@ -119,20 +152,22 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
   ): Promise<IShipperResponse<IUpsShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
-        this.parser.parseString(response, (xmlErr, trackResult) => {
-          if (xmlErr) {
-            reject(xmlErr);
-          } else {
-            resolve(trackResult);
-          }
-        });
-      });
+      const trackResult = await new Promise<IUpsTrackResult>(
+        (resolve, reject) => {
+          this.parser.parseString(response, (xmlErr, trackResult) => {
+            if (xmlErr) {
+              reject(xmlErr);
+            } else {
+              resolve(trackResult);
+            }
+          });
+        }
+      );
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
       }
-      let errorMsg, shipment;
+      let errorMsg: string, shipment: IUpsShipment;
       const responseStatus =
         trackResult?.TrackResponse?.Response?.[0]
           ?.ResponseStatusDescription?.[0];
@@ -154,13 +189,13 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
       if (errorMsg != null) {
         return { err: new Error(errorMsg) };
       }
-      return { shipment };
+      return { shipment: shipment };
     } catch (e) {
-      return { err: e };
+      return { err: new Error(e) };
     }
   }
 
-  getEta(shipment) {
+  getEta(shipment: IUpsShipment) {
     return this.presentTimestamp(
       shipment?.Package?.[0]?.RescheduledDeliveryDate?.[0] ||
         shipment?.ScheduledDeliveryDate?.[0] ||
@@ -168,16 +203,16 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     );
   }
 
-  getService(shipment) {
+  getService(shipment: IUpsShipment) {
     const service = shipment?.Service?.[0]?.Description?.[0];
     if (service) {
       return titleCase(service);
     }
   }
 
-  getWeight(shipment) {
+  getWeight(shipment: IUpsShipment) {
     const weightData = shipment?.Package?.[0]?.PackageWeight?.[0];
-    let weight = null;
+    let weight: string = null;
     if (weightData) {
       const units = weightData?.UnitOfMeasurement?.[0]?.Code?.[0];
       weight = weightData.Weight != null ? weightData?.Weight?.[0] : undefined;
@@ -188,7 +223,7 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     return weight;
   }
 
-  presentTimestamp(dateString?, timeString?) {
+  presentTimestamp(dateString?: string, timeString?: string): Date {
     if (dateString == null) {
       return;
     }
@@ -199,7 +234,7 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     return moment(`${dateString} ${timeString} +0000`, formatSpec).toDate();
   }
 
-  presentAddress(rawAddress) {
+  presentAddress(rawAddress: IUpsLocation): string {
     if (!rawAddress) {
       return;
     }
@@ -220,7 +255,7 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     });
   }
 
-  presentStatus(status) {
+  presentStatus(status: IUpsStatus): STATUS_TYPES {
     if (status == null) {
       return STATUS_TYPES.UNKNOWN;
     }
@@ -251,39 +286,36 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     }
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IUpsShipment): string {
     return this.presentAddress(shipment?.ShipTo?.[0]?.Address?.[0]);
   }
 
-  getActivitiesAndStatus(shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IUpsShipment): IShipmentActivities {
     const activities = [];
-    let status = null;
-    const rawActivities: any[] = shipment?.Package?.[0]?.Activity;
+    let status: STATUS_TYPES = null;
+    const rawActivities = shipment?.Package?.[0]?.Activity;
     for (const rawActivity of Array.from(rawActivities || [])) {
       const location = this.presentAddress(
         rawActivity?.ActivityLocation?.[0]?.Address?.[0]
       );
       const timestamp = this.presentTimestamp(
-        rawActivity.Date != null ? rawActivity.Date[0] : undefined,
-        rawActivity.Time != null ? rawActivity.Time[0] : undefined
+        rawActivity?.Date?.[0],
+        rawActivity?.Time?.[0]
       );
-      const lastStatus =
-        rawActivity.Status != null ? rawActivity.Status[0] : undefined;
+      const lastStatus = rawActivity?.Status?.[0];
       let details = lastStatus?.StatusType?.[0]?.Description?.[0];
       if (details != null && timestamp != null) {
-        const statusObj = rawActivity.Status;
+        const statusObj = rawActivity.Status[0];
         details = upperCaseFirst(lowerCase(details));
-        const activity: any = { timestamp, location, details };
-        if (statusObj != null ? rawActivity.Status[0] : undefined) {
+        const activity: IUpsActivity = { timestamp, location, details };
+        if (statusObj != null) {
           activity.statusType = statusObj?.StatusType?.[0]?.Code?.[0];
           activity.statusCode = statusObj?.StatusCode?.[0]?.Code?.[0];
         }
         activities.push(activity);
       }
       if (!status) {
-        status = this.presentStatus(
-          rawActivity.Status != null ? rawActivity.Status[0] : undefined
-        );
+        status = this.presentStatus(rawActivity?.Status[0]);
       }
     }
     return { activities, status };

@@ -27,7 +27,7 @@ import * as fs from "fs";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import { STATUS_TYPES } from "../src/shipper";
-import { UpsClient } from "../src/ups";
+import { IUpsLocation, IUpsShipment, UpsClient } from "../src/ups";
 
 const handleError = (e: any) => {
   if (e) {
@@ -205,14 +205,14 @@ describe("ups client", () => {
     });
 
     it("uses ScheduledDeliveryDate", () => {
-      const shipment = { ScheduledDeliveryDate: ["tomorrow"] };
+      const shipment: IUpsShipment = { ScheduledDeliveryDate: ["tomorrow"] };
       const eta = _upsClient.getEta(shipment);
       expect(_presentTimestamp.calledWith("tomorrow")).toBe(true);
       expect(eta).toBe("at midnight");
     });
 
     it("uses RescheduledDeliveryDate if ScheduledDeliveryDate is't available", () => {
-      const shipment = {
+      const shipment: IUpsShipment = {
         Package: [{ RescheduledDeliveryDate: ["next week"] }],
       };
       _upsClient.getEta(shipment);
@@ -228,13 +228,13 @@ describe("ups client", () => {
     });
 
     it("returns undefined if service is not present", () => {
-      const shipment = { NoService: "none" };
+      const shipment: IUpsShipment = { Service: undefined };
       const service = _upsClient.getService(shipment);
       expect(service).toBeUndefined();
     });
 
     it("returns undefined if service description is not present", () => {
-      const shipment = { Service: [{ NoDescription: ["abc"] }] };
+      const shipment = { Service: [] };
       const service = _upsClient.getService(shipment);
       expect(service).toBeUndefined();
     });
@@ -267,7 +267,9 @@ describe("ups client", () => {
     });
 
     it("returns null when weight data is malformed or unavailable", () => {
-      const shipment = { Package: ["PackageHasNoWeight"] };
+      const shipment: IUpsShipment = {
+        Package: [{ PackageWeight: undefined }],
+      };
       const weight = _upsClient.getWeight(shipment);
       expect(weight).toBeNull();
     });
@@ -282,9 +284,15 @@ describe("ups client", () => {
     );
 
     it("calls presentAddress with the ship to address", () => {
-      const shipment = { ShipTo: [{ Address: ["casa blanca"] }] };
+      const rawAddress: IUpsLocation = {
+        City: ["casa blanca"],
+        CountryCode: undefined,
+        PostalCode: undefined,
+        StateProvinceCode: undefined,
+      };
+      const shipment: IUpsShipment = { ShipTo: [{ Address: [rawAddress] }] };
       const address = _upsClient.getDestination(shipment);
-      expect(_presentAddress.calledWith("casa blanca")).toBe(true);
+      expect(_presentAddress.calledWith(rawAddress)).toBe(true);
       expect(address).toBe("mi casa");
     });
   });
