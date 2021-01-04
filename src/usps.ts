@@ -29,6 +29,7 @@
 import { AxiosRequestConfig } from "axios";
 import { Builder, Parser } from "xml2js";
 import {
+  IActivity,
   IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
@@ -40,8 +41,37 @@ interface IUspsClientOptions extends IShipperClientOptions {
   userId: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IUspsShipment {}
+interface IUspsActivity {
+  EventCity: string[] | undefined;
+  EventState: string[] | undefined;
+  EventZIPCode: string[] | undefined;
+  EventCountry: string[] | undefined;
+  EventDate: string[] | undefined;
+  EventTime: string[] | undefined;
+  /**
+   * The Event details
+   */
+  Event: string[] | undefined;
+}
+
+interface IUspsShipment {
+  PredictedDeliveryDate: string[] | undefined;
+  ExpectedDeliveryDate: string[] | undefined;
+  Class: string[] | undefined;
+  DestinationCity: string[] | undefined;
+  DestinationState: string[] | undefined;
+  DestinationZip: string[] | undefined;
+  StatusCategory: string[] | undefined;
+  Status: string[] | undefined;
+  TrackSummary: IUspsActivity[];
+  TrackDetail: IUspsActivity[];
+}
+
+interface IUspsTrackResult {
+  TrackResponse: {
+    TrackInfo: IUspsShipment[];
+  };
+}
 
 interface IUspsRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
@@ -93,7 +123,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     this.builder = new Builder({ renderOpts: { pretty: false } });
   }
 
-  generateRequest(trk, clientIp) {
+  generateRequest(trk: string, clientIp: string): string {
     if (clientIp == null) {
       clientIp = "127.0.0.1";
     }
@@ -111,19 +141,21 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
   }
 
   async validateResponse(
-    response: any
+    response: string
   ): Promise<IShipperResponse<IUspsShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
-        this.parser.parseString(response, (xmlErr, trackResult) => {
-          if (xmlErr) {
-            reject(xmlErr);
-          } else {
-            resolve(trackResult);
-          }
-        });
-      });
+      const trackResult = await new Promise<IUspsTrackResult>(
+        (resolve, reject) => {
+          this.parser.parseString(response, (xmlErr, trkResult) => {
+            if (xmlErr) {
+              reject(xmlErr);
+            } else {
+              resolve(trkResult);
+            }
+          });
+        }
+      );
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
@@ -139,7 +171,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     }
   }
 
-  getEta(shipment) {
+  getEta(shipment: IUspsShipment): Date {
     const rawEta =
       (shipment.PredictedDeliveryDate != null
         ? shipment.PredictedDeliveryDate[0]
@@ -152,18 +184,18 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     }
   }
 
-  getService(shipment) {
+  getService(shipment: IUspsShipment): string {
     const service = shipment.Class != null ? shipment.Class[0] : undefined;
     if (service != null) {
-      return service.replace(/\<SUP\>.*\<\/SUP\>/, "");
+      return service.replace(/<SUP>.*<\/SUP>/, "");
     }
   }
 
-  getWeight(shipment) {
+  getWeight(_: IUspsShipment): undefined {
     return undefined;
   }
 
-  presentTimestamp(dateString, timeString) {
+  presentTimestamp(dateString: string, timeString: string): Date {
     if (dateString == null) {
       return;
     }
@@ -173,7 +205,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     return new Date(`${dateString} ${timeString} +0000`);
   }
 
-  findStatusFromMap(statusText) {
+  findStatusFromMap(statusText: string): STATUS_TYPES {
     let status = STATUS_TYPES.UNKNOWN;
     if (statusText && statusText.length > 0) {
       for (const [key, value] of this.STATUS_MAP) {
@@ -186,11 +218,11 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     return status;
   }
 
-  presentStatus(details: string) {
+  presentStatus(details: string): STATUS_TYPES {
     return this.findStatusFromMap(details);
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IUspsShipment): string {
     const city =
       shipment.DestinationCity != null
         ? shipment.DestinationCity[0]
@@ -209,7 +241,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     });
   }
 
-  getStatus(shipment) {
+  getStatus(shipment: IUspsShipment): STATUS_TYPES {
     const statusCategory = shipment?.StatusCategory?.[0];
     switch (statusCategory) {
       case "Pre-Shipment":
@@ -221,12 +253,12 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     }
   }
 
-  presentActivity(rawActivity) {
+  presentActivity(rawActivity: IUspsActivity): IActivity {
     let countryCode, postalCode, stateCode;
     if (rawActivity == null) {
       return;
     }
-    let activity = null;
+    let activity: IActivity = null;
     const city =
       rawActivity.EventCity != null ? rawActivity.EventCity[0] : undefined;
     if (rawActivity?.EventState?.[0]?.length) {
@@ -261,7 +293,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     return activity;
   }
 
-  getActivitiesAndStatus(shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IUspsShipment): IShipmentActivities {
     const activities = [];
     const trackSummary = this.presentActivity(shipment?.TrackSummary?.[0]);
     if (trackSummary != null) {

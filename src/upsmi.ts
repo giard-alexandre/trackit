@@ -10,7 +10,6 @@ import {
   STATUS_TYPES,
 } from "./shipper";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IUpsmiShipment {
   $: cheerio.Root;
   summary: cheerio.Element;
