@@ -27,9 +27,10 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import { AxiosRequestConfig } from "axios";
-import { load } from "cheerio";
+import cheerio, { load } from "cheerio";
 import moment from "moment-timezone";
 import {
+  IActivity,
   IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
@@ -38,7 +39,12 @@ import {
 } from "./shipper";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IUpsmiShipment {}
+interface IUpsmiShipment {
+  $: cheerio.Root;
+  summary: cheerio.Element;
+  uspsDetails: cheerio.Cheerio;
+  miDetails: cheerio.Cheerio;
+}
 
 interface IUpsmiRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
@@ -56,7 +62,9 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     ["sorted", STATUS_TYPES.EN_ROUTE],
   ]);
 
-  validateResponse(response: any): Promise<IShipperResponse<IUpsmiShipment>> {
+  validateResponse(
+    response: string
+  ): Promise<IShipperResponse<IUpsmiShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
     const summary = $("#Table6")?.find("table")?.[0];
     const uspsDetails = $("#ctl00_mainContent_ctl00_pnlUSPS > table");
@@ -71,7 +79,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     });
   }
 
-  extractSummaryField(data, name) {
+  extractSummaryField(data: IUpsmiShipment, name: string): string | undefined {
     let value = null;
     const { $, summary } = data;
     if (summary == null) {
@@ -79,10 +87,10 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     }
     $(summary)
       .children("tr")
-      .each(function (rindex, row) {
+      .each((rindex, row) => {
         $(row)
           .children("td")
-          .each(function (cindex, col) {
+          .each((cindex, col) => {
             const regex = new RegExp(name);
             if (regex.test($(col).text())) {
               value = $(col)?.next()?.text()?.trim();
@@ -98,7 +106,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     return value;
   }
 
-  getEta(data) {
+  getEta(data: IUpsmiShipment): Date {
     let formattedEta;
     const eta = this.extractSummaryField(data, "Projected Delivery Date");
     if (eta != null) {
@@ -111,18 +119,18 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     }
   }
 
-  getService() {
+  getService(): undefined {
     return undefined;
   }
 
-  getWeight(data) {
+  getWeight(data: IUpsmiShipment): string {
     const weight = this.extractSummaryField(data, "Weight");
     if (weight != null ? weight.length : undefined) {
       return `${weight} lbs.`;
     }
   }
 
-  findStatusFromMap(statusText) {
+  findStatusFromMap(statusText: string): STATUS_TYPES {
     let status = STATUS_TYPES.UNKNOWN;
     if (statusText && statusText.length > 0) {
       for (const [key, value] of this.STATUS_MAP) {
@@ -135,20 +143,24 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     return status;
   }
 
-  presentStatus(details: string) {
+  presentStatus(details: string): STATUS_TYPES {
     return this.findStatusFromMap(details);
   }
 
-  extractTimestamp(tsString) {
-    if (tsString.match(":")) {
+  extractTimestamp(tsString: string): Date {
+    // Check id there is a colon present, this should tell us if the time is included in the TS
+    if (/:/.exec(tsString)) {
       return new Date(`${tsString} +0000`);
     } else {
       return new Date(`${tsString} 00:00 +0000`);
     }
   }
 
-  extractActivities($, table) {
-    const activities = [];
+  extractActivities(
+    $: cheerio.Root,
+    table: cheerio.Cheerio
+  ): IActivity[] | undefined {
+    const activities: IActivity[] = [];
     $(table)
       .children("tr")
       .each((rindex, row) => {
@@ -177,7 +189,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     return activities;
   }
 
-  getActivitiesAndStatus(data): IShipmentActivities {
+  getActivitiesAndStatus(data: IUpsmiShipment): IShipmentActivities {
     let status = null;
     const { $, uspsDetails, miDetails } = data;
     const set1 = this.extractActivities($, uspsDetails);
@@ -195,7 +207,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     return { activities, status };
   }
 
-  getDestination(data) {
+  getDestination(data: IUpsmiShipment): string {
     const destination = this.extractSummaryField(data, "Zip Code");
     if (destination != null ? destination.length : undefined) {
       return destination;
