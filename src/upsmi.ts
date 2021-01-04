@@ -1,31 +1,3 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-return-assign,
-    no-this-before-super,
-    no-unused-vars,
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { AxiosRequestConfig } from "axios";
 import cheerio, { load } from "cheerio";
 import moment from "moment-timezone";
@@ -80,7 +52,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
   }
 
   extractSummaryField(data: IUpsmiShipment, name: string): string | undefined {
-    let value = null;
+    let value: string = null;
     const { $, summary } = data;
     if (summary == null) {
       return;
@@ -107,7 +79,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
   }
 
   getEta(data: IUpsmiShipment): Date {
-    let formattedEta;
+    let formattedEta: moment.Moment;
     const eta = this.extractSummaryField(data, "Projected Delivery Date");
     if (eta != null) {
       formattedEta = moment(new Date(eta));
@@ -164,11 +136,11 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     $(table)
       .children("tr")
       .each((rindex, row) => {
-        let location, timestamp;
+        let location: string, timestamp: Date;
         if (rindex === 0) {
           return;
         }
-        let details = (location = timestamp = null);
+        let details: string = (location = timestamp = null);
         $(row)
           .children("td")
           .each((cindex, col) => {
@@ -190,7 +162,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
   }
 
   getActivitiesAndStatus(data: IUpsmiShipment): IShipmentActivities {
-    let status = null;
+    let status: STATUS_TYPES = null;
     const { $, uspsDetails, miDetails } = data;
     const set1 = this.extractActivities($, uspsDetails);
     const set2 = this.extractActivities($, miDetails);
