@@ -1,31 +1,3 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-    no-useless-escape,
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { AxiosRequestConfig } from "axios";
 import { Builder, Parser } from "xml2js";
 import {
@@ -167,7 +139,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
       }
       return { shipment: trackInfo };
     } catch (e) {
-      return { err: e };
+      return { err: e as Error };
     }
   }
 
@@ -254,7 +226,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
   }
 
   presentActivity(rawActivity: IUspsActivity): IActivity {
-    let countryCode, postalCode, stateCode;
+    let countryCode: string, postalCode: string, stateCode: string;
     if (rawActivity == null) {
       return;
     }
