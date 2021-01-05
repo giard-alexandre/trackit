@@ -17,7 +17,7 @@ interface IUpsmiShipment {
   miDetails: cheerio.Cheerio;
 }
 
-interface IUpsmiRequestOptions extends IShipperClientOptions {
+export interface IUpsmiRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 

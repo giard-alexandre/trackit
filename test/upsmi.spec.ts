@@ -1,28 +1,6 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import fs from "fs";
-import { STATUS_TYPES } from "../src/shipper";
-import { UpsMiClient } from "../src/upsmi";
+import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
+import { IUpsmiRequestOptions, UpsMiClient } from "../src/upsmi";
 
 const handleError = (e: unknown) => {
   if (e) {
@@ -30,11 +8,11 @@ const handleError = (e: unknown) => {
   }
 };
 
-function verifyActivity(act, ts, loc, details) {
+const verifyActivity = (act: IActivity, ts: number, loc: string, details: string) => {
   expect(act.timestamp.getTime()).toBe(ts);
   expect(act.location).toBe(loc);
   expect(act.details).toBe(details);
-}
+};
 
 describe("ups mi client", () => {
   let _upsMiClient: UpsMiClient;
@@ -43,7 +21,7 @@ describe("ups mi client", () => {
 
   describe("integration tests", () => {
     describe("delivered package", () => {
-      let _package = null;
+      let _package: ITrackitResponseData<IUpsmiRequestOptions> = null;
       beforeAll(async () => {
         const promise = new Promise((resolve, reject) => {
           fs.readFile("test/stub_data/upsmi_delivered.html", "utf8", (err, docs) => {
@@ -81,7 +59,7 @@ describe("ups mi client", () => {
     });
 
     describe("about to ship package", () => {
-      let _package = null;
+      let _package: ITrackitResponseData<IUpsmiRequestOptions> = null;
       beforeEach((done) =>
         fs.readFile("test/stub_data/upsmi_shipping.html", "utf8", (err, docs) => {
           handleError(err);
@@ -92,12 +70,6 @@ describe("ups mi client", () => {
           }, handleError);
         })
       );
-
-      function verifyActivity(act, ts, loc, details) {
-        expect(act.timestamp.getTime()).toBe(ts);
-        expect(act.location).toBe(loc);
-        expect(act.details).toBe(details);
-      }
 
       it("has a status of shipping", () => expect(_package.status).toBe(STATUS_TYPES.SHIPPING));
 
