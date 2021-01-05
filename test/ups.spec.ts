@@ -1,28 +1,5 @@
-/* eslint-disable
-    handle-callback-err,
-    no-new,
-    no-return-assign,
-    no-undef,
-    no-unused-expressions,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
+/* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return */
 import bond from "bondjs";
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import * as fs from "fs";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
@@ -50,7 +27,7 @@ describe("ups client", () => {
   );
 
   describe("generateRequest", () => {
-    let _xmlDocs = null;
+    let _xmlDocs: string[] = null;
 
     beforeAll(() => {
       const trackXml = _upsClient.generateRequest("1Z5678", "eloquent shipit");
@@ -60,21 +37,21 @@ describe("ups client", () => {
     it("generates a track request with two xml documents", () => expect(_xmlDocs).toHaveLength(3));
 
     it("includes an AccessRequest in the track request", (done) =>
-      _xmlParser.parseString(_xmlDocs[1], function (err, doc) {
+      _xmlParser.parseString(_xmlDocs[1], (err, doc) => {
         handleError(err);
         expect(doc).toHaveProperty("AccessRequest");
         done();
       }));
 
     it("includes a TrackRequest in the track request", (done) =>
-      _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+      _xmlParser.parseString(_xmlDocs[2], (err, doc) => {
         handleError(err);
         expect(doc).toHaveProperty("TrackRequest");
         done();
       }));
 
     it("includes an AccessRequest with license number, user id and password", (done) =>
-      _xmlParser.parseString(_xmlDocs[1], function (err, doc) {
+      _xmlParser.parseString(_xmlDocs[1], (err, doc) => {
         handleError(err);
         const accessReq = doc.AccessRequest;
         expect(accessReq).toHaveProperty("AccessLicenseNumber");
@@ -87,7 +64,7 @@ describe("ups client", () => {
       }));
 
     it("includes a TrackRequest with customer context", (done) =>
-      _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+      _xmlParser.parseString(_xmlDocs[2], (err, doc) => {
         handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq).toHaveProperty("Request");
@@ -96,7 +73,7 @@ describe("ups client", () => {
       }));
 
     it("includes a TrackRequest with request action and option", (done) =>
-      _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+      _xmlParser.parseString(_xmlDocs[2], (err, doc) => {
         handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq).toHaveProperty("Request");
@@ -106,7 +83,7 @@ describe("ups client", () => {
       }));
 
     it("includes a TrackRequest with the correct tracking number", (done) =>
-      _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
+      _xmlParser.parseString(_xmlDocs[2], (err, doc) => {
         handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq.TrackingNumber[0]).toBe("1Z5678");
@@ -186,6 +163,7 @@ describe("ups client", () => {
       // _presentTimestamp = jest
       //   .spyOn(_upsClient, "presentTimestamp")
       //   .mockReturnValue(endOfDay(new Date()));
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       _presentTimestamp = bond(_upsClient, "presentTimestamp").return("at midnight");
     });
 
@@ -592,8 +570,7 @@ describe("ups client", () => {
       it("has 6 activities with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(6);
         let act = _package.activities[0];
-        expect(act.timestamp).toEqual(moment("1998-08-30T10:39:00.000Z").toDate());
-        new Date("Aug 30 1998 10:39:00");
+        expect(act.timestamp).toEqual(new Date("1998-08-30T10:39:00.000Z"));
         expect(act.location).toBe("Bonn, DE");
         expect(act.details).toBe("Ups internal activity code");
         act = _package.activities[1];

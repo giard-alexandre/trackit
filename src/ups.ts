@@ -62,7 +62,7 @@ export interface IUpsActivity {
   details: string;
 }
 
-interface IUpsTrackResult {
+export interface IUpsTrackResult {
   TrackResponse: {
     Response: {
       ResponseStatusDescription: string;
