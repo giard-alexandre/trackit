@@ -44,7 +44,7 @@ describe("DHL Global Mail client", () => {
           _dhlgmClient.presentResponse(docs, "trk").then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -83,7 +83,7 @@ describe("DHL Global Mail client", () => {
           _dhlgmClient.presentResponse(docs, "trk").then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -117,7 +117,7 @@ describe("DHL Global Mail client", () => {
           _dhlgmClient.presentResponse(docs, "trk").then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );

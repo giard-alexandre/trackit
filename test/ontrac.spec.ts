@@ -43,7 +43,7 @@ describe("on trac client", () => {
           _onTracClient.presentResponse(r).then(({ err, data: resp }) => {
             expect(err).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );

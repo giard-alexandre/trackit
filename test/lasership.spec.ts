@@ -58,7 +58,7 @@ describe("lasership client", () => {
           _lsClient.presentResponse(doc, "trk").then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -89,7 +89,7 @@ describe("lasership client", () => {
           _lsClient.presentResponse(doc, "trk").then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -108,7 +108,7 @@ describe("lasership client", () => {
           _lsClient.presentResponse(doc, "trk").then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );

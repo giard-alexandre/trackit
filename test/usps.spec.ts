@@ -46,42 +46,42 @@ describe("usps client", () => {
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
         handleError(err);
         expect(doc).toHaveProperty("TrackFieldRequest");
-        return done();
+        done();
       }));
 
     it("includes user ID in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
         handleError(err);
         expect(doc.TrackFieldRequest.$.USERID).toBe("hello-neuman");
-        return done();
+        done();
       }));
 
     it("includes revision 1 in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
         handleError(err);
         expect(doc.TrackFieldRequest.Revision[0]).toBe("1");
-        return done();
+        done();
       }));
 
     it("includes client IP in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
         handleError(err);
         expect(doc.TrackFieldRequest.ClientIp[0]).toBe("10.10.5.2");
-        return done();
+        done();
       }));
 
     it("includes source ID in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
         handleError(err);
         expect(doc.TrackFieldRequest.SourceId[0]).toBe("shipit");
-        return done();
+        done();
       }));
 
     it("includes track ID in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
         handleError(err);
         expect(doc.TrackFieldRequest.TrackID[0].$.ID).toBe("9400111899560008231892");
-        return done();
+        done();
       }));
   });
 
@@ -95,7 +95,7 @@ describe("usps client", () => {
           _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -121,7 +121,7 @@ describe("usps client", () => {
           _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -152,7 +152,7 @@ describe("usps client", () => {
           _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(err).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -183,7 +183,7 @@ describe("usps client", () => {
           _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );

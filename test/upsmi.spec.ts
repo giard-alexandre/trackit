@@ -88,7 +88,7 @@ describe("ups mi client", () => {
           _upsMiClient.presentResponse(docs, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );

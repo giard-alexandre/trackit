@@ -63,14 +63,14 @@ describe("ups client", () => {
       _xmlParser.parseString(_xmlDocs[1], function (err, doc) {
         handleError(err);
         expect(doc).toHaveProperty("AccessRequest");
-        return done();
+        done();
       }));
 
     it("includes a TrackRequest in the track request", (done) =>
       _xmlParser.parseString(_xmlDocs[2], function (err, doc) {
         handleError(err);
         expect(doc).toHaveProperty("TrackRequest");
-        return done();
+        done();
       }));
 
     it("includes an AccessRequest with license number, user id and password", (done) =>
@@ -83,7 +83,7 @@ describe("ups client", () => {
         expect(accessReq.AccessLicenseNumber[0]).toBe("12345");
         expect(accessReq.UserId[0]).toBe("shipit");
         expect(accessReq.Password[0]).toBe("password");
-        return done();
+        done();
       }));
 
     it("includes a TrackRequest with customer context", (done) =>
@@ -92,7 +92,7 @@ describe("ups client", () => {
         const trackReq = doc.TrackRequest;
         expect(trackReq).toHaveProperty("Request");
         expect(trackReq.Request[0].TransactionReference[0].CustomerContext[0]).toBe("eloquent shipit");
-        return done();
+        done();
       }));
 
     it("includes a TrackRequest with request action and option", (done) =>
@@ -102,7 +102,7 @@ describe("ups client", () => {
         expect(trackReq).toHaveProperty("Request");
         expect(trackReq.Request[0].RequestAction[0]).toBe("track");
         expect(trackReq.Request[0].RequestOption[0]).toBe("3");
-        return done();
+        done();
       }));
 
     it("includes a TrackRequest with the correct tracking number", (done) =>
@@ -110,7 +110,7 @@ describe("ups client", () => {
         handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq.TrackingNumber[0]).toBe("1Z5678");
-        return done();
+        done();
       }));
   });
 
@@ -173,7 +173,7 @@ describe("ups client", () => {
       return _upsClient.validateResponse(_xmlHeader + goodResponse).then(({ err, shipment: resp }) => {
         expect(err).toBeFalsy();
         expect(resp).toBe("Smuggled Goods");
-        return done();
+        done();
       });
     });
   });
@@ -426,7 +426,7 @@ describe("ups client", () => {
       };
       _presentLocationSpy.to(function (raw) {
         expect(raw).toEqual(address);
-        return done();
+        done();
       });
       return _upsClient.presentAddress(rawAddress);
     });
@@ -511,7 +511,7 @@ describe("ups client", () => {
           _upsClient.presentResponse(xmlDoc, { trackingNumber: "1Z12345E0291980793" }).then(({ err, data: resp }) => {
             expect(err).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -547,7 +547,7 @@ describe("ups client", () => {
           _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -576,7 +576,7 @@ describe("ups client", () => {
           _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -610,7 +610,7 @@ describe("ups client", () => {
           _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -629,7 +629,7 @@ describe("ups client", () => {
           _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );

@@ -61,7 +61,7 @@ describe("prestige client", () => {
           _presClient.presentResponse(doc).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );

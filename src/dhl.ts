@@ -29,7 +29,7 @@ interface IDhlShipment {
   }[];
 }
 
-interface IDhlRequestOptions extends IShipperClientOptions {
+export interface IDhlRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 

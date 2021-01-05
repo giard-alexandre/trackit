@@ -141,7 +141,7 @@ describe("fedex client", () => {
       const badResponse = "<RandomXml>Random</RandomXml>";
       return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err }) => {
         expect(err).toBeDefined();
-        return done();
+        done();
       });
     });
 
@@ -150,7 +150,7 @@ describe("fedex client", () => {
         '<TrackReply xmlns="http://fedex.com/ws/track/v5" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><HighestSeverity>SUCCESS</HighestSeverity></TrackReply>';
       return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err }) => {
         expect(err).toBeDefined();
-        return done();
+        done();
       });
     });
 
@@ -159,7 +159,7 @@ describe("fedex client", () => {
         '<TrackReply xmlns="http://fedex.com/ws/track/v5" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><HighestSeverity>SUCCESS</HighestSeverity><Notifications><Severity>SUCCESS</Severity><Source>trck</Source><Code>1</Code><Message>Request was successfully processed.</Message><LocalizedMessage>Request was successfully processed.</LocalizedMessage></Notifications></TrackReply>';
       return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err }) => {
         expect(err).toBeDefined();
-        return done();
+        done();
       });
     });
 
@@ -169,7 +169,7 @@ describe("fedex client", () => {
       return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err, shipment: resp }) => {
         expect(err).toBeFalsy();
         expect(resp).toBe("details");
-        return done();
+        done();
       });
     });
   });
