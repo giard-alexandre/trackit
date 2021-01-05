@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { A1Client, IA1RequestOptions } from "../src/a1";
 import { ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
-const handleError = (e: any) => {
+const handleError = (e: unknown) => {
   if (e) {
     throw new Error("This should never have been reached");
   }

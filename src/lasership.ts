@@ -27,7 +27,7 @@ interface ILasershipShipment {
   Pieces: ILasershipShipmentPiece[];
 }
 
-interface ILasershipRequestOptions extends IShipperClientOptions {
+export interface ILasershipRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 

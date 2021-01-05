@@ -25,7 +25,7 @@ import { Parser } from "xml2js";
 import { STATUS_TYPES } from "../src/shipper";
 import { UspsClient } from "../src/usps";
 
-const handleError = (e: any) => {
+const handleError = (e: unknown) => {
   if (e) {
     throw new Error("This should never have been reached");
   }

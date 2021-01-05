@@ -5,7 +5,7 @@ import { Parser } from "xml2js";
 import { FedexClient } from "../src/fedex";
 import { STATUS_TYPES } from "../src/shipper";
 
-const handleError = (e: any) => {
+const handleError = (e: unknown) => {
   if (e) {
     throw new Error("This should never have been reached");
   }

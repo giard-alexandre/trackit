@@ -24,7 +24,7 @@ import fs from "fs";
 import { STATUS_TYPES } from "../src/shipper";
 import { UpsMiClient } from "../src/upsmi";
 
-const handleError = (e: any) => {
+const handleError = (e: unknown) => {
   if (e) {
     throw new Error("This should never have been reached");
   }

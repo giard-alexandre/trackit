@@ -4,7 +4,7 @@ import moment from "moment-timezone";
 import { AmazonClient, IAmazonRequestOptions } from "../src/amazon";
 import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
-const handleError = (e: any) => {
+const handleError = (e: unknown) => {
   if (e) {
     throw new Error("This should never have been reached");
   }

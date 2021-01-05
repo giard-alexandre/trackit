@@ -1,42 +1,22 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+import { AxiosRequestConfig } from "axios";
 import fs from "fs";
 import moment from "moment-timezone";
-import { LasershipClient } from "../src/lasership";
-import { STATUS_TYPES } from "../src/shipper";
+import { ILasershipRequestOptions, LasershipClient } from "../src/lasership";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
-const handleError = (e: any) => {
+const handleError = (e: unknown) => {
   if (e) {
     throw new Error("This should never have been reached");
   }
 };
 
 describe("lasership client", () => {
-  let _lsClient = null;
+  let _lsClient: LasershipClient = null;
 
   beforeAll(() => (_lsClient = new LasershipClient({})));
 
   describe("requestOptions", () => {
-    let _options = null;
+    let _options: AxiosRequestConfig = null;
 
     beforeAll(() => (_options = _lsClient.requestOptions({ trackingNumber: "LA40305346" })));
 
@@ -49,13 +29,13 @@ describe("lasership client", () => {
   describe("validateResponse", () => {});
 
   describe("integration tests", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<ILasershipRequestOptions> = null;
 
     describe("delivered package", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/lasership_delivered.json", "utf8", (err, doc) => {
           handleError(err);
-          _lsClient.presentResponse(doc, "trk").then(({ err: respErr, data: resp }) => {
+          _lsClient.presentResponse(doc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
             done();
@@ -86,7 +66,7 @@ describe("lasership client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/lasership_released.json", "utf8", (err, doc) => {
           handleError(err);
-          _lsClient.presentResponse(doc, "trk").then(({ err: respErr, data: resp }) => {
+          _lsClient.presentResponse(doc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
             done();
@@ -105,7 +85,7 @@ describe("lasership client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/lasership_enroute.json", "utf8", (err, doc) => {
           handleError(err);
-          _lsClient.presentResponse(doc, "trk").then(({ err: respErr, data: resp }) => {
+          _lsClient.presentResponse(doc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
             done();
