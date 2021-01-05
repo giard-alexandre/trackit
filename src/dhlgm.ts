@@ -7,7 +7,7 @@ import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperC
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IDhlgmShipment {}
 
-interface IDhlgmRequestOptions extends IShipperClientOptions {
+export interface IDhlgmRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 

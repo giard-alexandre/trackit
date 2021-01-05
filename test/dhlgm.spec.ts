@@ -1,27 +1,6 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import fs from "fs";
-import { DhlGmClient } from "../src/dhlgm";
-import { STATUS_TYPES } from "../src/shipper";
+import { DhlGmClient, IDhlgmRequestOptions } from "../src/dhlgm";
+import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
 const handleError = (e: unknown) => {
   if (e) {
@@ -29,31 +8,31 @@ const handleError = (e: unknown) => {
   }
 };
 
+const verifyActivity = (act: IActivity, ts: string, loc: string, details: string) => {
+  expect(act.timestamp).toEqual(new Date(ts));
+  expect(act.location).toBe(loc);
+  expect(act.details).toBe(details);
+};
+
 describe("DHL Global Mail client", () => {
-  let _dhlgmClient = null;
+  let _dhlgmClient: DhlGmClient = null;
 
   beforeAll(() => (_dhlgmClient = new DhlGmClient({})));
 
   describe("integration tests", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<IDhlgmRequestOptions> = null;
 
     describe("in transit package", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/dhlgm_intransit.html", "utf8", (err, docs) => {
           handleError(err);
-          _dhlgmClient.presentResponse(docs, "trk").then(({ err: respErr, data: resp }) => {
+          _dhlgmClient.presentResponse(docs, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
             done();
           }, handleError);
         })
       );
-
-      function verifyActivity(act, ts, loc, details) {
-        expect(act.timestamp).toEqual(new Date(ts));
-        expect(act.location).toBe(loc);
-        expect(act.details).toBe(details);
-      }
 
       it("has a status of en-route", () => expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
 
@@ -80,19 +59,13 @@ describe("DHL Global Mail client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/dhlgm_delivered.html", "utf8", (err, docs) => {
           handleError(err);
-          _dhlgmClient.presentResponse(docs, "trk").then(({ err: respErr, data: resp }) => {
+          _dhlgmClient.presentResponse(docs, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
             done();
           }, handleError);
         })
       );
-
-      function verifyActivity(act, ts, loc, details) {
-        expect(act.timestamp).toEqual(new Date(ts));
-        expect(act.location).toBe(loc);
-        expect(act.details).toBe(details);
-      }
 
       it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
@@ -114,7 +87,7 @@ describe("DHL Global Mail client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/dhlgm_eta.html", "utf8", (err, docs) => {
           handleError(err);
-          _dhlgmClient.presentResponse(docs, "trk").then(({ err: respErr, data: resp }) => {
+          _dhlgmClient.presentResponse(docs, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
             expect(respErr).toBeFalsy();
             _package = resp;
             done();
