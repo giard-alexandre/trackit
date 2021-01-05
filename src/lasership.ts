@@ -1,12 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 interface ILasershipAddress {
   City: string;
@@ -37,10 +31,7 @@ interface ILasershipRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 
-class LasershipClient extends ShipperClient<
-  ILasershipShipment,
-  ILasershipRequestOptions
-> {
+class LasershipClient extends ShipperClient<ILasershipShipment, ILasershipRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["Released", STATUS_TYPES.DELIVERED],
     ["Delivered", STATUS_TYPES.DELIVERED],
@@ -51,9 +42,7 @@ class LasershipClient extends ShipperClient<
     ["OrderCreated", STATUS_TYPES.SHIPPING],
   ]);
 
-  validateResponse(
-    responseString: string
-  ): Promise<IShipperResponse<ILasershipShipment>> {
+  validateResponse(responseString: string): Promise<IShipperResponse<ILasershipShipment>> {
     try {
       const response = JSON.parse(responseString) as ILasershipShipment;
       if (response.Events == null) {
@@ -84,7 +73,7 @@ class LasershipClient extends ShipperClient<
     }
   }
 
-  getActivitiesAndStatus(shipment: ILasershipShipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: ILasershipShipment): IActivitiesAndStatus {
     const activities = [];
     let status: STATUS_TYPES = null;
     let rawActivities = shipment != null ? shipment.Events : undefined;
@@ -96,25 +85,20 @@ class LasershipClient extends ShipperClient<
       if (dateTime != null) {
         timestamp = moment(`${dateTime}Z`).toDate();
       }
-      const details =
-        rawActivity != null ? rawActivity.EventShortText : undefined;
+      const details = rawActivity != null ? rawActivity.EventShortText : undefined;
       if (details != null && timestamp != null) {
         const activity = { timestamp, location, details };
         activities.push(activity);
       }
       if (!status) {
-        status = this.presentStatus(
-          rawActivity != null ? rawActivity.EventType : undefined
-        );
+        status = this.presentStatus(rawActivity != null ? rawActivity.EventType : undefined);
       }
     }
     return { activities, status };
   }
 
   getEta(shipment: ILasershipShipment): Date {
-    if (
-      (shipment != null ? shipment.EstimatedDeliveryDate : undefined) == null
-    ) {
+    if ((shipment != null ? shipment.EstimatedDeliveryDate : undefined) == null) {
       return;
     }
     return moment(`${shipment.EstimatedDeliveryDate}T00:00:00Z`).toDate();
@@ -145,9 +129,7 @@ class LasershipClient extends ShipperClient<
     return this.presentAddress(destination);
   }
 
-  requestOptions({
-    trackingNumber,
-  }: ILasershipRequestOptions): AxiosRequestConfig {
+  requestOptions({ trackingNumber }: ILasershipRequestOptions): AxiosRequestConfig {
     return {
       method: "GET",
       url: `http://www.lasership.com/track/${trackingNumber}/json`,

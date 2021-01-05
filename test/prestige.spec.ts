@@ -47,9 +47,7 @@ describe("prestige client", () => {
     it("creates a GET request", () => expect(_options.method).toBe("GET"));
 
     it("uses the correct URL", () =>
-      expect(_options.url).toBe(
-        "http://www.prestigedelivery.com/TrackingHandler.ashx?trackingNumbers=PS80558274"
-      ));
+      expect(_options.url).toBe("http://www.prestigedelivery.com/TrackingHandler.ashx?trackingNumbers=PS80558274"));
   });
 
   describe("integration tests", () => {
@@ -58,27 +56,19 @@ describe("prestige client", () => {
 
     describe("out for delivery package", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/prestige_delivered.json",
-          "utf8",
-          (err, doc) => {
-            handleError(err);
-            _presClient
-              .presentResponse(doc)
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(respErr).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/prestige_delivered.json", "utf8", (err, doc) => {
+          handleError(err);
+          _presClient.presentResponse(doc).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of delivered", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
+      it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
-      it("has an eta of Oct 20", () =>
-        expect(_package.eta).toEqual(new Date("2015-10-20T00:00:00.000Z")));
+      it("has an eta of Oct 20", () => expect(_package.eta).toEqual(new Date("2015-10-20T00:00:00.000Z")));
 
       it("has a destination of Bloomfield Hills", () =>
         expect(_package.destination).toBe("Bloomfield Hills, MI 48304-3264"));
@@ -90,15 +80,11 @@ describe("prestige client", () => {
         });
 
         it("with timestamp Oct 19th, 2:39pm", () =>
-          expect(_activity.timestamp).toEqual(
-            new Date("2015-10-19T14:39:00Z")
-          ));
+          expect(_activity.timestamp).toEqual(new Date("2015-10-19T14:39:00Z")));
 
-        it("with location Taylor, MI", () =>
-          expect(_activity.location).toBe("Taylor, MI 48180"));
+        it("with location Taylor, MI", () => expect(_activity.location).toBe("Taylor, MI 48180"));
 
-        it("with details Out-for-delivery", () =>
-          expect(_activity.details).toBe("Delivered"));
+        it("with details Out-for-delivery", () => expect(_activity.details).toBe("Delivered"));
       });
 
       describe("has next activity", () => {
@@ -108,15 +94,11 @@ describe("prestige client", () => {
         });
 
         it("with timestamp Oct 19th, 12:53pm", () =>
-          expect(_activity.timestamp).toEqual(
-            new Date("2015-10-19T12:53:00Z")
-          ));
+          expect(_activity.timestamp).toEqual(new Date("2015-10-19T12:53:00Z")));
 
-        it("with location Taylor, MI", () =>
-          expect(_activity.location).toBe("Taylor, MI 48180"));
+        it("with location Taylor, MI", () => expect(_activity.location).toBe("Taylor, MI 48180"));
 
-        it("with details Out-for-delivery", () =>
-          expect(_activity.details).toBe("Out for delivery"));
+        it("with details Out-for-delivery", () => expect(_activity.details).toBe("Out for delivery"));
       });
 
       describe("has another activity", () => {
@@ -126,15 +108,11 @@ describe("prestige client", () => {
         });
 
         it("with timestamp Oct 19th, 6:31am", () =>
-          expect(_activity.timestamp).toEqual(
-            new Date("2015-10-19T06:31:00Z")
-          ));
+          expect(_activity.timestamp).toEqual(new Date("2015-10-19T06:31:00Z")));
 
-        it("with location Taylor, MI", () =>
-          expect(_activity.location).toBe("Taylor, MI 48180"));
+        it("with location Taylor, MI", () => expect(_activity.location).toBe("Taylor, MI 48180"));
 
-        it("with details Out-for-delivery", () =>
-          expect(_activity.details).toBe("Shipment received by carrier"));
+        it("with details Out-for-delivery", () => expect(_activity.details).toBe("Shipment received by carrier"));
       });
 
       describe("has first activity", () => {
@@ -144,17 +122,12 @@ describe("prestige client", () => {
         });
 
         it("with timestamp Oct 18th, 3:55pm", () =>
-          expect(_activity.timestamp).toEqual(
-            new Date("2015-10-18T15:55:00Z")
-          ));
+          expect(_activity.timestamp).toEqual(new Date("2015-10-18T15:55:00Z")));
 
-        it("with location Taylor, MI", () =>
-          expect(_activity.location).toBe("Jeffersonville, IN 47130"));
+        it("with location Taylor, MI", () => expect(_activity.location).toBe("Jeffersonville, IN 47130"));
 
         it("with details Out-for-delivery", () =>
-          expect(_activity.details).toBe(
-            "Prestige has not yet received this shipment"
-          ));
+          expect(_activity.details).toBe("Prestige has not yet received this shipment"));
       });
     });
   });

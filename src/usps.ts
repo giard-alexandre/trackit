@@ -1,8 +1,8 @@
 import { AxiosRequestConfig } from "axios";
 import { Builder, Parser } from "xml2js";
 import {
+  IActivitiesAndStatus,
   IActivity,
-  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -112,22 +112,18 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     });
   }
 
-  async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IUspsShipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<IUspsShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<IUspsTrackResult>(
-        (resolve, reject) => {
-          this.parser.parseString(response, (xmlErr, trkResult) => {
-            if (xmlErr) {
-              reject(xmlErr);
-            } else {
-              resolve(trkResult);
-            }
-          });
-        }
-      );
+      const trackResult = await new Promise<IUspsTrackResult>((resolve, reject) => {
+        this.parser.parseString(response, (xmlErr, trkResult) => {
+          if (xmlErr) {
+            reject(xmlErr);
+          } else {
+            resolve(trkResult);
+          }
+        });
+      });
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
@@ -145,12 +141,8 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
 
   getEta(shipment: IUspsShipment): Date {
     const rawEta =
-      (shipment.PredictedDeliveryDate != null
-        ? shipment.PredictedDeliveryDate[0]
-        : undefined) ||
-      (shipment.ExpectedDeliveryDate != null
-        ? shipment.ExpectedDeliveryDate[0]
-        : undefined);
+      (shipment.PredictedDeliveryDate != null ? shipment.PredictedDeliveryDate[0] : undefined) ||
+      (shipment.ExpectedDeliveryDate != null ? shipment.ExpectedDeliveryDate[0] : undefined);
     if (rawEta != null) {
       return new Date(`${rawEta} 00:00:00Z`);
     }
@@ -171,9 +163,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     if (dateString == null) {
       return;
     }
-    timeString = (timeString != null ? timeString.length : undefined)
-      ? timeString
-      : "12:00 am";
+    timeString = (timeString != null ? timeString.length : undefined) ? timeString : "12:00 am";
     return new Date(`${dateString} ${timeString} +0000`);
   }
 
@@ -195,16 +185,9 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
   }
 
   getDestination(shipment: IUspsShipment): string {
-    const city =
-      shipment.DestinationCity != null
-        ? shipment.DestinationCity[0]
-        : undefined;
-    const stateCode =
-      shipment.DestinationState != null
-        ? shipment.DestinationState[0]
-        : undefined;
-    const postalCode =
-      shipment.DestinationZip != null ? shipment.DestinationZip[0] : undefined;
+    const city = shipment.DestinationCity != null ? shipment.DestinationCity[0] : undefined;
+    const stateCode = shipment.DestinationState != null ? shipment.DestinationState[0] : undefined;
+    const postalCode = shipment.DestinationZip != null ? shipment.DestinationZip[0] : undefined;
     return this.presentLocation({
       city,
       stateCode,
@@ -231,22 +214,15 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
       return;
     }
     let activity: IActivity = null;
-    const city =
-      rawActivity.EventCity != null ? rawActivity.EventCity[0] : undefined;
+    const city = rawActivity.EventCity != null ? rawActivity.EventCity[0] : undefined;
     if (rawActivity?.EventState?.[0]?.length) {
       stateCode = rawActivity?.EventState?.[0] || undefined;
     }
     if (rawActivity?.EventZIPCode?.[0]?.length) {
-      postalCode =
-        rawActivity.EventZIPCode != null
-          ? rawActivity.EventZIPCode[0]
-          : undefined;
+      postalCode = rawActivity.EventZIPCode != null ? rawActivity.EventZIPCode[0] : undefined;
     }
     if (rawActivity?.EventCountry?.[0]?.length) {
-      countryCode =
-        rawActivity.EventCountry != null
-          ? rawActivity.EventCountry[0]
-          : undefined;
+      countryCode = rawActivity.EventCountry != null ? rawActivity.EventCountry[0] : undefined;
     }
     const location = this.presentLocation({
       city,
@@ -254,10 +230,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
       countryCode,
       postalCode,
     });
-    const timestamp = this.presentTimestamp(
-      rawActivity?.EventDate?.[0],
-      rawActivity?.EventTime?.[0]
-    );
+    const timestamp = this.presentTimestamp(rawActivity?.EventDate?.[0], rawActivity?.EventTime?.[0]);
     const details = rawActivity?.Event?.[0];
     if (details != null && timestamp != null) {
       activity = { timestamp, location, details };
@@ -265,15 +238,13 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     return activity;
   }
 
-  getActivitiesAndStatus(shipment: IUspsShipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IUspsShipment): IActivitiesAndStatus {
     const activities = [];
     const trackSummary = this.presentActivity(shipment?.TrackSummary?.[0]);
     if (trackSummary != null) {
       activities.push(trackSummary);
     }
-    for (const rawActivity of Array.from(
-      (shipment != null ? shipment.TrackDetail : undefined) || []
-    )) {
+    for (const rawActivity of Array.from((shipment != null ? shipment.TrackDetail : undefined) || [])) {
       const activity = this.presentActivity(rawActivity);
       if (activity != null) {
         activities.push(activity);
@@ -282,11 +253,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     return { activities, status: this.getStatus(shipment) };
   }
 
-  requestOptions({
-    trackingNumber,
-    clientIp,
-    test,
-  }: IUspsRequestOptions): AxiosRequestConfig {
+  requestOptions({ trackingNumber, clientIp, test }: IUspsRequestOptions): AxiosRequestConfig {
     const endpoint = test ? "ShippingAPITest.dll" : "ShippingAPI.dll";
     const xml = this.generateRequest(trackingNumber, clientIp);
     return {

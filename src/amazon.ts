@@ -1,13 +1,7 @@
 import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 const MONTHS = [
   /JANUARY/,
@@ -45,10 +39,7 @@ interface IAmazonRequestOptions extends IShipperClientOptions {
   orderingShipmentId: string;
 }
 
-class AmazonClient extends ShipperClient<
-  IAmazonShipment,
-  IAmazonRequestOptions
-> {
+class AmazonClient extends ShipperClient<IAmazonShipment, IAmazonRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["ORDERED", STATUS_TYPES.SHIPPING],
     ["SHIPPED", STATUS_TYPES.EN_ROUTE],
@@ -57,9 +48,7 @@ class AmazonClient extends ShipperClient<
     ["DELIVERED", STATUS_TYPES.DELIVERED],
   ]);
 
-  async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IAmazonShipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<IAmazonShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
 
     return Promise.resolve({ err: null, shipment: { $, response } });
@@ -97,14 +86,10 @@ class AmazonClient extends ShipperClient<
     });
     const { response } = data;
     // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
-    let matchResult = response
-      .toString()
-      .match('"promiseMessage":"Arriving (.*?)"');
+    let matchResult = response.toString().match('"promiseMessage":"Arriving (.*?)"');
     if (matchResult == null) {
       // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
-      matchResult = response
-        .toString()
-        .match('"promiseMessage":"Now expected (.*?)"');
+      matchResult = response.toString().match('"promiseMessage":"Now expected (.*?)"');
     }
     let arrival: string = matchResult != null ? matchResult[1] : undefined;
     if (arrival != null ? /today/.exec(arrival) : undefined) {
@@ -152,18 +137,14 @@ class AmazonClient extends ShipperClient<
     return matches?.length > 0 ? this.STATUS_MAP.get(matches[1]) : undefined;
   }
 
-  getActivitiesAndStatus(data: IAmazonShipment): IShipmentActivities {
+  getActivitiesAndStatus(data: IAmazonShipment): IActivitiesAndStatus {
     const activities = [];
     const status = this.presentStatus(data);
     if (data == null) {
       return { activities, status };
     }
     const { $ } = data;
-    for (const row of Array.from(
-      $("#tracking-events-container")
-        .children(".a-container")
-        .children(".a-row")
-    )) {
+    for (const row of Array.from($("#tracking-events-container").children(".a-container").children(".a-row"))) {
       if (!$(row).children(".tracking-event-date-header").length) {
         continue;
       }

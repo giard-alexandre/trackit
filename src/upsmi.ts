@@ -2,8 +2,8 @@ import { AxiosRequestConfig } from "axios";
 import cheerio, { load } from "cheerio";
 import moment from "moment-timezone";
 import {
+  IActivitiesAndStatus,
   IActivity,
-  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -33,9 +33,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     ["sorted", STATUS_TYPES.EN_ROUTE],
   ]);
 
-  validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IUpsmiShipment>> {
+  validateResponse(response: string): Promise<IShipperResponse<IUpsmiShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
     const summary = $("#Table6")?.find("table")?.[0];
     const uspsDetails = $("#ctl00_mainContent_ctl00_pnlUSPS > table");
@@ -127,10 +125,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     }
   }
 
-  extractActivities(
-    $: cheerio.Root,
-    table: cheerio.Cheerio
-  ): IActivity[] | undefined {
+  extractActivities($: cheerio.Root, table: cheerio.Cheerio): IActivity[] | undefined {
     const activities: IActivity[] = [];
     $(table)
       .children("tr")
@@ -160,7 +155,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     return activities;
   }
 
-  getActivitiesAndStatus(data: IUpsmiShipment): IShipmentActivities {
+  getActivitiesAndStatus(data: IUpsmiShipment): IActivitiesAndStatus {
     let status: STATUS_TYPES = null;
     const { $, uspsDetails, miDetails } = data;
     const set1 = this.extractActivities($, uspsDetails);
@@ -170,9 +165,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
       if (status != null) {
         break;
       }
-      status = this.presentStatus(
-        activity != null ? activity.details : undefined
-      );
+      status = this.presentStatus(activity != null ? activity.details : undefined);
     }
 
     return { activities, status };

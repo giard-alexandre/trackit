@@ -2,13 +2,7 @@ import { AxiosRequestConfig } from "axios";
 import { upperCaseFirst } from "change-case";
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IDhlgmShipment {}
@@ -33,9 +27,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     ["delivered", STATUS_TYPES.DELIVERED],
   ]);
 
-  validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IDhlgmShipment>> {
+  validateResponse(response: string): Promise<IShipperResponse<IDhlgmShipment>> {
     try {
       response = response.replace(/<br>/gi, " ");
       return Promise.resolve({
@@ -51,7 +43,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
       return;
     }
     const $ = data;
-    let value: string;
+    let value: string = null;
     $(".card-info > dl")
       .children()
       .each((_, field) => {
@@ -70,7 +62,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
       return;
     }
     const $ = data;
-    let value: string;
+    let value: string = null;
     $(".card > .row")
       .children()
       .each((_, field) => {
@@ -129,7 +121,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     return this.findStatusFromMap(details);
   }
 
-  getActivitiesAndStatus(data: cheerio.Root): IShipmentActivities {
+  getActivitiesAndStatus(data: cheerio.Root): IActivitiesAndStatus {
     let status: STATUS_TYPES = null;
     const activities = [];
     if (data == null) {
@@ -150,19 +142,14 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
             currentTime = currentTime?.trim()?.split(" ")?.[0];
           }
           currentTime = currentTime.replace("AM", " AM").replace("PM", " PM");
-          timestamp = moment(
-            new Date(`${currentDate} ${currentTime}`)
-          ).toDate();
+          timestamp = moment(new Date(`${currentDate} ${currentTime}`)).toDate();
         }
         let location = row.find(".timeline-location-responsive").text();
         location = location != null ? location.trim() : undefined;
         if (location != null ? location.length : undefined) {
           location = upperCaseFirst(location);
         }
-        const details: string = row
-          ?.find(".timeline-description")
-          ?.text()
-          ?.trim();
+        const details: string = row?.find(".timeline-description")?.text()?.trim();
         if (details != null && timestamp != null) {
           if (status == null) {
             status = this.presentStatus(details);

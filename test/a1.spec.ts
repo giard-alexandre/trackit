@@ -34,24 +34,19 @@ describe("a1 client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/a1_shipping.xml", "utf8", (err, xmlDoc) => {
           handleError(err);
-          _a1Client
-            .presentResponse(xmlDoc)
-            .then(({ err, presentedResponse }) => {
-              expect(err).toBeFalsy();
-              _package = presentedResponse;
-              return done();
-            }, handleError);
+          _a1Client.presentResponse(xmlDoc).then(({ err, data }) => {
+            expect(err).toBeFalsy();
+            _package = data;
+            return done();
+          }, handleError);
         })
       );
 
-      it("has a status of en-route", () =>
-        expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
+      it("has a status of en-route", () => expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
 
-      it("has a destination of Chicago, IL", () =>
-        expect(_package.destination).toBe("Chicago, IL 60607"));
+      it("has a destination of Chicago, IL", () => expect(_package.destination).toBe("Chicago, IL 60607"));
 
-      it("has an eta of July 13th", () =>
-        expect(_package.eta).toEqual(new Date("2015-07-13T00:00:00.000Z")));
+      it("has an eta of July 13th", () => expect(_package.eta).toEqual(new Date("2015-07-13T00:00:00.000Z")));
 
       it("has 1 activity", () => expect(_package.activities).toHaveLength(1));
 
@@ -59,9 +54,7 @@ describe("a1 client", () => {
         const act = _package.activities[0];
         expect(act.timestamp).toEqual(new Date("2015-07-10T15:10:00.000Z"));
         expect(act.datetime).toBe("2015-07-10T10:10:00");
-        expect(act.details).toBe(
-          "Shipment has left seller facility and is in transit"
-        );
+        expect(act.details).toBe("Shipment has left seller facility and is in transit");
         expect(act.location).toBe("Whitestown, IN 46075");
       });
     });
@@ -70,30 +63,21 @@ describe("a1 client", () => {
       let _package = null;
 
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/a1_delivered.xml",
-          "utf8",
-          (err, xmlDoc) => {
+        fs.readFile("test/stub_data/a1_delivered.xml", "utf8", (err, xmlDoc) => {
+          expect(err).toBeFalsy();
+          _a1Client.presentResponse(xmlDoc).then(({ err, data }) => {
             expect(err).toBeFalsy();
-            _a1Client
-              .presentResponse(xmlDoc)
-              .then(({ err, presentedResponse }) => {
-                expect(err).toBeFalsy();
-                _package = presentedResponse;
-                return done();
-              }, handleError);
-          }
-        )
+            _package = data;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of delivered", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
+      it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
-      it("has a destination of Chicago, IL", () =>
-        expect(_package.destination).toBe("Chicago, IL 60634"));
+      it("has a destination of Chicago, IL", () => expect(_package.destination).toBe("Chicago, IL 60634"));
 
-      it("has an eta of October 7th", () =>
-        expect(_package.eta).toEqual(new Date("2013-10-07T00:00:00.000Z")));
+      it("has an eta of October 7th", () => expect(_package.eta).toEqual(new Date("2013-10-07T00:00:00.000Z")));
 
       it("has 5 activities", () => expect(_package.activities).toHaveLength(5));
 
@@ -113,22 +97,16 @@ describe("a1 client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/a1_error.xml", "utf8", (err, xmlDoc) => {
           handleError(err);
-          _a1Client
-            .presentResponse(xmlDoc)
-            .then(({ err, presentedResponse }) => {
-              _package = presentedResponse;
-              _err = err;
-              return done();
-            }, handleError);
+          _a1Client.presentResponse(xmlDoc).then(({ err, data }) => {
+            _package = data;
+            _err = err;
+            return done();
+          }, handleError);
         })
       );
 
       it("complains about an invalid tracking number", () =>
-        expect(_err).toEqual(
-          new Error(
-            "No data exists in the carrier's system for the given tracking number"
-          )
-        ));
+        expect(_err).toEqual(new Error("No data exists in the carrier's system for the given tracking number")));
     });
   });
 });

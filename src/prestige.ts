@@ -1,12 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 interface IPrestigeRawActivity {
   CountryCode: string;
@@ -42,19 +36,14 @@ interface IPrestigeRequestOptions extends IShipperClientOptions {
 
 const ADDR_ATTRS = ["City", "State", "Zip"];
 
-class PrestigeClient extends ShipperClient<
-  IPrestigeShipment,
-  IPrestigeRequestOptions
-> {
+class PrestigeClient extends ShipperClient<IPrestigeShipment, IPrestigeRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["301", STATUS_TYPES.DELIVERED],
     ["302", STATUS_TYPES.OUT_FOR_DELIVERY],
     ["101", STATUS_TYPES.SHIPPING],
   ]);
 
-  async validateResponse(
-    responseString: string
-  ): Promise<IShipperResponse<IPrestigeShipment>> {
+  async validateResponse(responseString: string): Promise<IShipperResponse<IPrestigeShipment>> {
     const responseArray = JSON.parse(responseString) as IPrestigeShipment[];
     if (!(responseArray != null ? responseArray.length : undefined)) {
       return await Promise.resolve({
@@ -107,27 +96,23 @@ class PrestigeClient extends ShipperClient<
     }
   }
 
-  getActivitiesAndStatus(shipment: IPrestigeShipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IPrestigeShipment): IActivitiesAndStatus {
     const activities = [];
     let status: STATUS_TYPES = null;
-    const rawActivities =
-      shipment != null ? shipment.TrackingEventHistory : undefined;
+    const rawActivities = shipment != null ? shipment.TrackingEventHistory : undefined;
     for (const rawActivity of rawActivities || []) {
       const location = this.presentAddress("EL", rawActivity);
-      const dateTime = `${
-        rawActivity != null ? rawActivity.serverDate : undefined
-      } ${rawActivity != null ? rawActivity.serverTime : undefined}`;
+      const dateTime = `${rawActivity != null ? rawActivity.serverDate : undefined} ${
+        rawActivity != null ? rawActivity.serverTime : undefined
+      }`;
       const timestamp = new Date(`${dateTime} +00:00`);
-      const details =
-        rawActivity != null ? rawActivity.EventCodeDesc : undefined;
+      const details = rawActivity != null ? rawActivity.EventCodeDesc : undefined;
       if (details != null && timestamp != null) {
         const activity = { timestamp, location, details };
         activities.push(activity);
       }
       if (!status) {
-        status = this.presentStatus(
-          rawActivity != null ? rawActivity.EventCode : undefined
-        );
+        status = this.presentStatus(rawActivity != null ? rawActivity.EventCode : undefined);
       }
     }
     return { activities, status };
@@ -163,9 +148,7 @@ class PrestigeClient extends ShipperClient<
     return this.presentAddress("PD", shipment?.TrackingEventHistory?.[0]);
   }
 
-  requestOptions({
-    trackingNumber,
-  }: IPrestigeRequestOptions): AxiosRequestConfig {
+  requestOptions({ trackingNumber }: IPrestigeRequestOptions): AxiosRequestConfig {
     return {
       method: "GET",
       url: `http://www.prestigedelivery.com/TrackingHandler.ashx?trackingNumbers=${trackingNumber}`,

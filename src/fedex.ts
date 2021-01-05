@@ -1,13 +1,7 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { Builder, Parser } from "xml2js";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 interface IFedexAddress {
   City: string[];
@@ -55,10 +49,7 @@ interface IFedexRequestOptions extends IShipperClientOptions {
   reference: string;
 }
 
-export class FedexClient extends ShipperClient<
-  IFedexShipment,
-  IFedexRequestOptions
-> {
+export class FedexClient extends ShipperClient<IFedexShipment, IFedexRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["AA", STATUS_TYPES.EN_ROUTE],
     ["AD", STATUS_TYPES.EN_ROUTE],
@@ -132,8 +123,7 @@ export class FedexClient extends ShipperClient<
         $: {
           "xmlns:ns": "http://fedex.com/ws/track/v5",
           "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-          "xsi:schemaLocation":
-            "http://fedex.com/ws/track/v4 TrackService_v4.xsd",
+          "xsi:schemaLocation": "http://fedex.com/ws/track/v4 TrackService_v4.xsd",
         },
         "ns:WebAuthenticationDetail": {
           "ns:UserCredential": {
@@ -163,36 +153,26 @@ export class FedexClient extends ShipperClient<
     });
   }
 
-  async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IFedexShipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<IFedexShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<IFedexTrackResult>(
-        (resolve, reject) => {
-          this.parser.parseString(
-            response,
-            (
-              xmlErr: Error,
-              trackResult: IFedexTrackResult | PromiseLike<IFedexTrackResult>
-            ) => {
-              if (xmlErr) {
-                reject(xmlErr);
-              } else {
-                resolve(trackResult);
-              }
+      const trackResult = await new Promise<IFedexTrackResult>((resolve, reject) => {
+        this.parser.parseString(
+          response,
+          (xmlErr: Error, trackResult: IFedexTrackResult | PromiseLike<IFedexTrackResult>) => {
+            if (xmlErr) {
+              reject(xmlErr);
+            } else {
+              resolve(trackResult);
             }
-          );
-        }
-      );
+          }
+        );
+      });
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
       }
-      const notifications =
-        trackResult.TrackReply != null
-          ? trackResult.TrackReply.Notifications
-          : undefined;
+      const notifications = trackResult.TrackReply != null ? trackResult.TrackReply.Notifications : undefined;
       const success = notifications.find((notif) => notif?.Code?.[0] === "0");
       if (!success) {
         return { err: new Error(notifications.toString() || "invalid reply") };
@@ -211,14 +191,9 @@ export class FedexClient extends ShipperClient<
     if (city != null) {
       city = city.replace("FEDEX SMARTPOST ", "");
     }
-    const stateCode =
-      address.StateOrProvinceCode != null
-        ? address.StateOrProvinceCode[0]
-        : undefined;
-    const countryCode =
-      address.CountryCode != null ? address.CountryCode[0] : undefined;
-    const postalCode =
-      address.PostalCode != null ? address.PostalCode[0] : undefined;
+    const stateCode = address.StateOrProvinceCode != null ? address.StateOrProvinceCode[0] : undefined;
+    const countryCode = address.CountryCode != null ? address.CountryCode[0] : undefined;
+    const postalCode = address.PostalCode != null ? address.PostalCode[0] : undefined;
     return this.presentLocation({
       city,
       stateCode,
@@ -232,29 +207,21 @@ export class FedexClient extends ShipperClient<
     if (statusCode == null) {
       return;
     }
-    return this.STATUS_MAP.has(statusCode)
-      ? this.STATUS_MAP.get(statusCode)
-      : STATUS_TYPES.UNKNOWN;
+    return this.STATUS_MAP.has(statusCode) ? this.STATUS_MAP.get(statusCode) : STATUS_TYPES.UNKNOWN;
   }
 
-  getActivitiesAndStatus(shipment: IFedexShipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IFedexShipment): IActivitiesAndStatus {
     const activities = [];
     for (const rawActivity of shipment?.Events || []) {
       let datetime: string, timestamp: Date;
-      const location = this.presentAddress(
-        rawActivity.Address != null ? rawActivity.Address[0] : undefined
-      );
-      const rawTimestamp =
-        rawActivity.Timestamp != null ? rawActivity.Timestamp[0] : undefined;
+      const location = this.presentAddress(rawActivity.Address != null ? rawActivity.Address[0] : undefined);
+      const rawTimestamp = rawActivity.Timestamp != null ? rawActivity.Timestamp[0] : undefined;
       if (rawTimestamp != null) {
         const eventTime = moment(rawTimestamp);
         timestamp = eventTime.toDate();
         datetime = rawTimestamp.slice(0, 19);
       }
-      const details =
-        rawActivity.EventDescription != null
-          ? rawActivity.EventDescription[0]
-          : undefined;
+      const details = rawActivity.EventDescription != null ? rawActivity.EventDescription[0] : undefined;
       if (details != null && timestamp != null) {
         const activity = { timestamp, datetime, location, details };
         activities.push(activity);
@@ -288,17 +255,10 @@ export class FedexClient extends ShipperClient<
   }
 
   getDestination(shipment: IFedexShipment): string {
-    return this.presentAddress(
-      shipment.DestinationAddress != null
-        ? shipment.DestinationAddress[0]
-        : undefined
-    );
+    return this.presentAddress(shipment.DestinationAddress != null ? shipment.DestinationAddress[0] : undefined);
   }
 
-  requestOptions({
-    trackingNumber,
-    reference,
-  }: IFedexRequestOptions): AxiosRequestConfig {
+  requestOptions({ trackingNumber, reference }: IFedexRequestOptions): AxiosRequestConfig {
     return {
       method: "POST",
       url: "https://ws.fedex.com/xml",

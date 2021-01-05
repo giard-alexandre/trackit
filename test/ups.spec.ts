@@ -57,8 +57,7 @@ describe("ups client", () => {
       return (_xmlDocs = trackXml.split(_xmlHeader));
     });
 
-    it("generates a track request with two xml documents", () =>
-      expect(_xmlDocs).toHaveLength(3));
+    it("generates a track request with two xml documents", () => expect(_xmlDocs).toHaveLength(3));
 
     it("includes an AccessRequest in the track request", (done) =>
       _xmlParser.parseString(_xmlDocs[1], function (err, doc) {
@@ -92,9 +91,7 @@ describe("ups client", () => {
         handleError(err);
         const trackReq = doc.TrackRequest;
         expect(trackReq).toHaveProperty("Request");
-        expect(
-          trackReq.Request[0].TransactionReference[0].CustomerContext[0]
-        ).toBe("eloquent shipit");
+        expect(trackReq.Request[0].TransactionReference[0].CustomerContext[0]).toBe("eloquent shipit");
         return done();
       }));
 
@@ -120,15 +117,13 @@ describe("ups client", () => {
   describe("validateResponse", () => {
     it("returns an error if response is not an xml document", (done) => {
       let errorReported = false;
-      return _upsClient
-        .validateResponse("bad xml")
-        .then(({ err, shipment: resp }) => {
-          expect(err).toBeDefined();
-          if (!errorReported) {
-            done();
-          }
-          return (errorReported = true);
-        });
+      return _upsClient.validateResponse("bad xml").then(({ err, shipment: resp }) => {
+        expect(err).toBeDefined();
+        if (!errorReported) {
+          done();
+        }
+        return (errorReported = true);
+      });
     });
 
     it("returns an error if xml response does not contain a response status", (done) => {
@@ -136,15 +131,13 @@ describe("ups client", () => {
       _xmlHeader = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
       const badResponse =
         "<TrackResponse><Response><ResponseStatusCode>1</ResponseStatusCode></Response></TrackResponse>";
-      return _upsClient
-        .validateResponse(_xmlHeader + badResponse)
-        .then(({ err, shipment: resp }) => {
-          expect(err).toBeDefined();
-          if (!errorReported) {
-            done();
-          }
-          return (errorReported = true);
-        });
+      return _upsClient.validateResponse(_xmlHeader + badResponse).then(({ err, shipment: resp }) => {
+        expect(err).toBeDefined();
+        if (!errorReported) {
+          done();
+        }
+        return (errorReported = true);
+      });
     });
 
     it("returns error description if xml response contains an unsuccessful status", (done) => {
@@ -152,42 +145,36 @@ describe("ups client", () => {
       _xmlHeader = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
       const failureResponse =
         "<TrackResponse><Response><ResponseStatusCode>1</ResponseStatusCode><ResponseStatusDescription>Exception</ResponseStatusDescription><Error><ErrorDescription>No data</ErrorDescription></Error></Response></TrackResponse>";
-      return _upsClient
-        .validateResponse(_xmlHeader + failureResponse)
-        .then(({ err, shipment: resp }) => {
-          expect(err).toEqual(new Error("No data"));
-          if (!errorReported) {
-            done();
-          }
-          return (errorReported = true);
-        });
+      return _upsClient.validateResponse(_xmlHeader + failureResponse).then(({ err, shipment: resp }) => {
+        expect(err).toEqual(new Error("No data"));
+        if (!errorReported) {
+          done();
+        }
+        return (errorReported = true);
+      });
     });
 
     it("returns an error if xml response does not contain shipment data", (done) => {
       let errorReported = false;
       const noShipmentResponse =
         "<TrackResponse><Response><ResponseStatusCode>1</ResponseStatusCode><ResponseStatusDescription>Success</ResponseStatusDescription></Response></TrackResponse>";
-      return _upsClient
-        .validateResponse(_xmlHeader + noShipmentResponse)
-        .then(({ err, shipment: resp }) => {
-          expect(err).toBeDefined();
-          if (!errorReported) {
-            done();
-          }
-          return (errorReported = true);
-        });
+      return _upsClient.validateResponse(_xmlHeader + noShipmentResponse).then(({ err, shipment: resp }) => {
+        expect(err).toBeDefined();
+        if (!errorReported) {
+          done();
+        }
+        return (errorReported = true);
+      });
     });
 
     it("returns shipment data retrieved from the xml response", (done) => {
       const goodResponse =
         "<TrackResponse><Response><ResponseStatusCode>1</ResponseStatusCode><ResponseStatusDescription>Success</ResponseStatusDescription></Response><Shipment>Smuggled Goods</Shipment></TrackResponse>";
-      return _upsClient
-        .validateResponse(_xmlHeader + goodResponse)
-        .then(({ err, shipment: resp }) => {
-          expect(err).toBeFalsy();
-          expect(resp).toBe("Smuggled Goods");
-          return done();
-        });
+      return _upsClient.validateResponse(_xmlHeader + goodResponse).then(({ err, shipment: resp }) => {
+        expect(err).toBeFalsy();
+        expect(resp).toBe("Smuggled Goods");
+        return done();
+      });
     });
   });
 
@@ -199,9 +186,7 @@ describe("ups client", () => {
       // _presentTimestamp = jest
       //   .spyOn(_upsClient, "presentTimestamp")
       //   .mockReturnValue(endOfDay(new Date()));
-      _presentTimestamp = bond(_upsClient, "presentTimestamp").return(
-        "at midnight"
-      );
+      _presentTimestamp = bond(_upsClient, "presentTimestamp").return("at midnight");
     });
 
     it("uses ScheduledDeliveryDate", () => {
@@ -278,10 +263,7 @@ describe("ups client", () => {
   describe("getDestination", () => {
     let _presentAddress = null;
 
-    beforeEach(
-      () =>
-        (_presentAddress = bond(_upsClient, "presentAddress").return("mi casa"))
-    );
+    beforeEach(() => (_presentAddress = bond(_upsClient, "presentAddress").return("mi casa")));
 
     it("calls presentAddress with the ship to address", () => {
       const rawAddress: IUpsLocation = {
@@ -359,9 +341,7 @@ describe("ups client", () => {
       _presentTimestampSpy.return("long long ago");
       const presentStatus = _presentStatusSpy.return("look to the east");
       _shipment.Package[0].Activity.push(_activity4);
-      const { activities, status } = _upsClient.getActivitiesAndStatus(
-        _shipment
-      );
+      const { activities, status } = _upsClient.getActivitiesAndStatus(_shipment);
       expect(activities).toBeInstanceOf(Array);
       expect(activities).toHaveLength(2);
       expect(status).toBe("look to the east");
@@ -424,9 +404,7 @@ describe("ups client", () => {
   describe("presentAddress", () => {
     let _presentLocationSpy = null;
 
-    beforeEach(
-      () => (_presentLocationSpy = bond(_upsClient, "presentLocation"))
-    );
+    beforeEach(() => (_presentLocationSpy = bond(_upsClient, "presentLocation")));
 
     it("returns undefined if raw address isn't specified", () => {
       const address = _upsClient.presentAddress(undefined);
@@ -528,53 +506,37 @@ describe("ups client", () => {
 
     describe("delivered package", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/ups_delivered.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _upsClient
-              .presentResponse(xmlDoc, { trackingNumber: "1Z12345E0291980793" })
-              .then(({ err, presentedResponse: resp }) => {
-                expect(err).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/ups_delivered.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _upsClient.presentResponse(xmlDoc, { trackingNumber: "1Z12345E0291980793" }).then(({ err, data: resp }) => {
+            expect(err).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
       it("returns the original tracking number", () =>
         expect(_package.request.trackingNumber).toBe("1Z12345E0291980793"));
 
-      it("has a status of delivered", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
+      it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
-      it("has a service of 2nd Day Air", () =>
-        expect(_package.service).toBe("2 Nd Day Air"));
+      it("has a service of 2nd Day Air", () => expect(_package.service).toBe("2 Nd Day Air"));
 
-      it("has a destination of anytown", () =>
-        expect(_package.destination).toBe("Anytown, GA 30340"));
+      it("has a destination of anytown", () => expect(_package.destination).toBe("Anytown, GA 30340"));
 
-      it("has a weight of 5 lbs", () =>
-        expect(_package.weight).toBe("5.00 LBS"));
+      it("has a weight of 5 lbs", () => expect(_package.weight).toBe("5.00 LBS"));
 
       it("has two activities with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(2);
         const act1 = _package.activities[0];
         const act2 = _package.activities[1];
-        expect(act1.timestamp).toEqual(
-          moment("2010-06-10T12:00:00.000Z").toDate()
-        );
+        expect(act1.timestamp).toEqual(moment("2010-06-10T12:00:00.000Z").toDate());
         expect(act1.location).toBe("Anytown, GA 30340");
         expect(act1.details).toBe("Delivered");
-        expect(act2.timestamp).toEqual(
-          moment("2010-06-08T12:00:00.000Z").toDate()
-        );
+        expect(act2.timestamp).toEqual(moment("2010-06-08T12:00:00.000Z").toDate());
         expect(act2.location).toBe("US");
-        expect(act2.details).toBe(
-          "Billing information received. shipment date pending."
-        );
+        expect(act2.details).toBe("Billing information received. shipment date pending.");
       });
     });
 
@@ -582,33 +544,26 @@ describe("ups client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/ups_transit.xml", "utf8", (err, xmlDoc) => {
           handleError(err);
-          _upsClient
-            .presentResponse(xmlDoc, { trackingNumber: "trk" })
-            .then(({ err: respErr, presentedResponse: resp }) => {
-              expect(respErr).toBeFalsy();
-              _package = resp;
-              return done();
-            }, handleError);
+          _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
         })
       );
 
-      it("has a status of in-transit", () =>
-        expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
+      it("has a status of in-transit", () => expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
 
-      it("has a service of Next Day Air Saver", () =>
-        expect(_package.service).toBe("Next Day Air Saver"));
+      it("has a service of Next Day Air Saver", () => expect(_package.service).toBe("Next Day Air Saver"));
 
       it("has 0.00 weight", () => expect(_package.weight).toBe("0.00 LBS"));
 
-      it("has destination of anytown", () =>
-        expect(_package.destination).toBe("Anytown, GA 30304"));
+      it("has destination of anytown", () => expect(_package.destination).toBe("Anytown, GA 30304"));
 
       it("has one activity with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(1);
         const act = _package.activities[0];
-        expect(act.timestamp).toEqual(
-          moment("2010-05-05T01:00:00.000Z").toDate()
-        );
+        expect(act.timestamp).toEqual(moment("2010-05-05T01:00:00.000Z").toDate());
         expect(act.location).toBe("Grand Junction Air S, CO");
         expect(act.details).toBe("Origin scan");
       });
@@ -616,109 +571,76 @@ describe("ups client", () => {
 
     describe("multiple delivery attempts", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/ups_delivery_attempt.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _upsClient
-              .presentResponse(xmlDoc, { trackingNumber: "trk" })
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(respErr).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/ups_delivery_attempt.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of delayed", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELAYED));
+      it("has a status of delayed", () => expect(_package.status).toBe(STATUS_TYPES.DELAYED));
 
-      it("has a service of Next Day Air Saver", () =>
-        expect(_package.service).toBe("Next Day Air Saver"));
+      it("has a service of Next Day Air Saver", () => expect(_package.service).toBe("Next Day Air Saver"));
 
       it("has 1.00 weight", () => expect(_package.weight).toBe("1.00 LBS"));
 
-      it("has destination of anytown", () =>
-        expect(_package.destination).toBe("Anytown, GA 30340"));
+      it("has destination of anytown", () => expect(_package.destination).toBe("Anytown, GA 30340"));
 
       it("has 6 activities with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(6);
         let act = _package.activities[0];
-        expect(act.timestamp).toEqual(
-          moment("1998-08-30T10:39:00.000Z").toDate()
-        );
+        expect(act.timestamp).toEqual(moment("1998-08-30T10:39:00.000Z").toDate());
         new Date("Aug 30 1998 10:39:00");
         expect(act.location).toBe("Bonn, DE");
         expect(act.details).toBe("Ups internal activity code");
         act = _package.activities[1];
-        expect(act.timestamp).toEqual(
-          moment("2010-08-30T10:32:00.000Z").toDate()
-        );
+        expect(act.timestamp).toEqual(moment("2010-08-30T10:32:00.000Z").toDate());
         expect(act.location).toBe("Bonn, DE");
-        expect(act.details).toBe(
-          "Adverse weather conditions caused this delay"
-        );
+        expect(act.details).toBe("Adverse weather conditions caused this delay");
       });
     });
 
     describe("rescheduled delivery date", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/ups_rescheduled.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _upsClient
-              .presentResponse(xmlDoc, { trackingNumber: "trk" })
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(respErr).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/ups_rescheduled.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of", () =>
-        expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
+      it("has a status of", () => expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
 
-      it("has destination of anytown", () =>
-        expect(_package.destination).toBe("Chicago, IL 60607"));
+      it("has destination of anytown", () => expect(_package.destination).toBe("Chicago, IL 60607"));
 
-      it("has an eta of Oct 24th", () =>
-        expect(_package.eta).toEqual(new Date("2014-10-24T00:00:00.000Z")));
+      it("has an eta of Oct 24th", () => expect(_package.eta).toEqual(new Date("2014-10-24T00:00:00.000Z")));
     });
 
     describe("2nd tracking number", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/ups_2nd_trk_number.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _upsClient
-              .presentResponse(xmlDoc, { trackingNumber: "trk" })
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(respErr).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/ups_2nd_trk_number.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _upsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of delivered", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
+      it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
-      it("has a service of Ground", () =>
-        expect(_package.service).toBe("Ground"));
+      it("has a service of Ground", () => expect(_package.service).toBe("Ground"));
 
       it("has 1.00 weight", () => expect(_package.weight).toBe("20.00 LBS"));
 
-      it("has destination of anytown", () =>
-        expect(_package.destination).toBe("Anytown, GA 30304"));
+      it("has destination of anytown", () => expect(_package.destination).toBe("Anytown, GA 30304"));
 
       it("has 6 activities with timestamp, location and details", () => {
         let act;

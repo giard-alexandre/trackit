@@ -2,8 +2,8 @@ import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import {
+  IActivitiesAndStatus,
   IActivity,
-  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -24,6 +24,7 @@ interface ITrackingEventDetail {
   EventDateTime: string[];
   EventCodeDesc: string[];
 }
+
 interface ITrackingEventHistory {
   TrackingEventDetail: ITrackingEventDetail[];
 }
@@ -65,32 +66,27 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     this.parser = new Parser();
   }
 
-  async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IA1Shipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<IA1Shipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<IA1TrackResult>(
-        (resolve, reject) => {
-          this.parser.parseString(response, (xmlErr, trackResult) => {
-            if (xmlErr) {
-              reject(xmlErr);
-            } else {
-              resolve(trackResult);
-            }
-          });
-        }
-      );
+      const trackResult = await new Promise<IA1TrackResult>((resolve, reject) => {
+        this.parser.parseString(response, (xmlErr, trackResult) => {
+          if (xmlErr) {
+            reject(xmlErr);
+          } else {
+            resolve(trackResult);
+          }
+        });
+      });
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
       }
-      const trackingInfo =
-        trackResult?.AmazonTrackingResponse?.PackageTrackingInfo?.[0];
+      const trackingInfo = trackResult?.AmazonTrackingResponse?.PackageTrackingInfo?.[0];
       if (trackingInfo?.TrackingNumber == null) {
         const error =
-          trackResult?.AmazonTrackingResponse?.TrackingErrorInfo?.[0]
-            ?.TrackingErrorDetail?.[0]?.ErrorDetailCodeDesc?.[0];
+          trackResult?.AmazonTrackingResponse?.TrackingErrorInfo?.[0]?.TrackingErrorDetail?.[0]
+            ?.ErrorDetailCodeDesc?.[0];
         if (error != null) {
           return { err: new Error(error) };
         }
@@ -119,8 +115,7 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
   }
 
   getStatus(shipment: IA1Shipment): STATUS_TYPES {
-    const lastActivity =
-      shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail?.[0];
+    const lastActivity = shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail?.[0];
     const statusCode = lastActivity?.EventCode?.[0];
     if (statusCode == null) {
       return;
@@ -141,11 +136,10 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
     }
   }
 
-  getActivitiesAndStatus(shipment: IA1Shipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IA1Shipment): IActivitiesAndStatus {
     const activities: Array<IActivity> = [];
     const status = this.getStatus(shipment);
-    let rawActivities: ITrackingEventDetail[] =
-      shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail;
+    let rawActivities: ITrackingEventDetail[] = shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail;
     rawActivities = rawActivities ?? [];
     for (const rawActivity of rawActivities) {
       let datetime: string, timestamp: Date;
@@ -167,15 +161,12 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
   }
 
   getEta(shipment: IA1Shipment): Date {
-    const activities =
-      shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail || [];
+    const activities = shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail || [];
     const firstActivity = activities[activities.length - 1];
     if (firstActivity?.EstimatedDeliveryDate?.[0] == null) {
       return;
     }
-    return moment(
-      `${firstActivity?.EstimatedDeliveryDate?.[0]}T00:00:00Z`
-    ).toDate();
+    return moment(`${firstActivity?.EstimatedDeliveryDate?.[0]}T00:00:00Z`).toDate();
   }
 
   getService(_: IA1Shipment): null {

@@ -2,13 +2,7 @@ import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import moment from "moment-timezone";
 import { Builder, Parser } from "xml2js";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 interface IUpsClientOptions extends IShipperClientOptions {
   userId: string;
@@ -147,41 +141,30 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     return `${accessRequest}${trackRequest}`;
   }
 
-  async validateResponse(
-    response: any
-  ): Promise<IShipperResponse<IUpsShipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<IUpsShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<IUpsTrackResult>(
-        (resolve, reject) => {
-          this.parser.parseString(response, (xmlErr, trackResult) => {
-            if (xmlErr) {
-              reject(xmlErr);
-            } else {
-              resolve(trackResult);
-            }
-          });
-        }
-      );
+      const trackResult = await new Promise<IUpsTrackResult>((resolve, reject) => {
+        this.parser.parseString(response, (xmlErr, trackResult) => {
+          if (xmlErr) {
+            reject(xmlErr);
+          } else {
+            resolve(trackResult);
+          }
+        });
+      });
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
       }
       let errorMsg: string, shipment: IUpsShipment;
-      const responseStatus =
-        trackResult?.TrackResponse?.Response?.[0]
-          ?.ResponseStatusDescription?.[0];
+      const responseStatus = trackResult?.TrackResponse?.Response?.[0]?.ResponseStatusDescription?.[0];
       if (responseStatus !== "Success") {
-        const error =
-          trackResult?.TrackResponse?.Response?.[0]?.Error?.[0]
-            ?.ErrorDescription?.[0];
+        const error = trackResult?.TrackResponse?.Response?.[0]?.Error?.[0]?.ErrorDescription?.[0];
         errorMsg = error || "unknown error";
         shipment = null;
       } else {
-        shipment =
-          trackResult.TrackResponse.Shipment != null
-            ? trackResult.TrackResponse.Shipment[0]
-            : undefined;
+        shipment = trackResult.TrackResponse.Shipment != null ? trackResult.TrackResponse.Shipment[0] : undefined;
         if (shipment == null) {
           errorMsg = "missing shipment data";
         }
@@ -195,22 +178,20 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     }
   }
 
-  getEta(shipment: IUpsShipment) {
+  getEta(shipment: IUpsShipment): Date {
     return this.presentTimestamp(
-      shipment?.Package?.[0]?.RescheduledDeliveryDate?.[0] ||
-        shipment?.ScheduledDeliveryDate?.[0] ||
-        undefined
+      shipment?.Package?.[0]?.RescheduledDeliveryDate?.[0] || shipment?.ScheduledDeliveryDate?.[0] || undefined
     );
   }
 
-  getService(shipment: IUpsShipment) {
+  getService(shipment: IUpsShipment): string {
     const service = shipment?.Service?.[0]?.Description?.[0];
     if (service) {
       return titleCase(service);
     }
   }
 
-  getWeight(shipment: IUpsShipment) {
+  getWeight(shipment: IUpsShipment): string {
     const weightData = shipment?.Package?.[0]?.PackageWeight?.[0];
     let weight: string = null;
     if (weightData) {
@@ -239,14 +220,9 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
       return;
     }
     const city = rawAddress.City != null ? rawAddress.City[0] : undefined;
-    const stateCode =
-      rawAddress.StateProvinceCode != null
-        ? rawAddress.StateProvinceCode[0]
-        : undefined;
-    const countryCode =
-      rawAddress.CountryCode != null ? rawAddress.CountryCode[0] : undefined;
-    const postalCode =
-      rawAddress.PostalCode != null ? rawAddress.PostalCode[0] : undefined;
+    const stateCode = rawAddress.StateProvinceCode != null ? rawAddress.StateProvinceCode[0] : undefined;
+    const countryCode = rawAddress.CountryCode != null ? rawAddress.CountryCode[0] : undefined;
+    const postalCode = rawAddress.PostalCode != null ? rawAddress.PostalCode[0] : undefined;
     return this.presentLocation({
       city,
       stateCode,
@@ -290,18 +266,13 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     return this.presentAddress(shipment?.ShipTo?.[0]?.Address?.[0]);
   }
 
-  getActivitiesAndStatus(shipment: IUpsShipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IUpsShipment): IActivitiesAndStatus {
     const activities = [];
     let status: STATUS_TYPES = null;
     const rawActivities = shipment?.Package?.[0]?.Activity;
     for (const rawActivity of Array.from(rawActivities || [])) {
-      const location = this.presentAddress(
-        rawActivity?.ActivityLocation?.[0]?.Address?.[0]
-      );
-      const timestamp = this.presentTimestamp(
-        rawActivity?.Date?.[0],
-        rawActivity?.Time?.[0]
-      );
+      const location = this.presentAddress(rawActivity?.ActivityLocation?.[0]?.Address?.[0]);
+      const timestamp = this.presentTimestamp(rawActivity?.Date?.[0], rawActivity?.Time?.[0]);
       const lastStatus = rawActivity?.Status?.[0];
       let details = lastStatus?.StatusType?.[0]?.Description?.[0];
       if (details != null && timestamp != null) {
@@ -321,11 +292,7 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     return { activities, status };
   }
 
-  requestOptions({
-    trackingNumber,
-    reference,
-    test,
-  }: IUpsRequestOptions): AxiosRequestConfig {
+  requestOptions({ trackingNumber, reference, test }: IUpsRequestOptions): AxiosRequestConfig {
     const hostname = test ? "wwwcie.ups.com" : "onlinetools.ups.com";
     return {
       method: "POST",

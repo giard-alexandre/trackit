@@ -40,13 +40,7 @@ describe("usps client", () => {
   describe("generateRequest", () => {
     let _xmlDoc = null;
 
-    beforeAll(
-      () =>
-        (_xmlDoc = _uspsClient.generateRequest(
-          "9400111899560008231892",
-          "10.10.5.2"
-        ))
-    );
+    beforeAll(() => (_xmlDoc = _uspsClient.generateRequest("9400111899560008231892", "10.10.5.2")));
 
     it("includes TrackFieldRequest in the track request document", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
@@ -86,9 +80,7 @@ describe("usps client", () => {
     it("includes track ID in the track field request", (done) =>
       _xmlParser.parseString(_xmlDoc, function (err, doc) {
         handleError(err);
-        expect(doc.TrackFieldRequest.TrackID[0].$.ID).toBe(
-          "9400111899560008231892"
-        );
+        expect(doc.TrackFieldRequest.TrackID[0].$.ID).toBe("9400111899560008231892");
         return done();
       }));
   });
@@ -98,67 +90,47 @@ describe("usps client", () => {
 
     describe("pre-shipment package", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/usps_pre_shipment.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _uspsClient
-              .presentResponse(xmlDoc, { trackingNumber: "trk" })
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(respErr).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/usps_pre_shipment.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of shipping", () =>
-        expect(_package.status).toBe(STATUS_TYPES.SHIPPING));
+      it("has a status of shipping", () => expect(_package.status).toBe(STATUS_TYPES.SHIPPING));
 
-      it("has a service of Package Service", () =>
-        expect(_package.service).toBe("Package Services"));
+      it("has a service of Package Service", () => expect(_package.service).toBe("Package Services"));
 
-      it("has a destination of Kihei, HW", () =>
-        expect(_package.destination).toBe("Kihei, HI 96753"));
+      it("has a destination of Kihei, HW", () => expect(_package.destination).toBe("Kihei, HI 96753"));
 
       it("has only one activity", () => {
         expect(_package.activities).toHaveLength(1);
         expect(_package.activities[0].timestamp.getTime()).toBe(1393545600000);
         expect(_package.activities[0].location).toBe("");
-        expect(_package.activities[0].details).toBe(
-          "Electronic Shipping Info Received"
-        );
+        expect(_package.activities[0].details).toBe("Electronic Shipping Info Received");
       });
     });
 
     describe("delivered package", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/usps_delivered.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _uspsClient
-              .presentResponse(xmlDoc, { trackingNumber: "trk" })
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(respErr).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/usps_delivered.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of shipping", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
+      it("has a status of shipping", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
-      it("has a service of first class package", () =>
-        expect(_package.service).toBe("First-Class Package Service"));
+      it("has a service of first class package", () => expect(_package.service).toBe("First-Class Package Service"));
 
-      it("has a destination of Chicago", () =>
-        expect(_package.destination).toBe("Chicago, IL 60654"));
+      it("has a destination of Chicago", () => expect(_package.destination).toBe("Chicago, IL 60654"));
 
       it("has 9 activities", () => {
         expect(_package.activities).toHaveLength(9);
@@ -175,30 +147,21 @@ describe("usps client", () => {
 
     describe("out-for-delivery package", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/usps_out_for_delivery.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _uspsClient
-              .presentResponse(xmlDoc, { trackingNumber: "trk" })
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(err).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/usps_out_for_delivery.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(err).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
-      it("has a status of shipping", () =>
-        expect(_package.status).toBe(STATUS_TYPES.OUT_FOR_DELIVERY));
+      it("has a status of shipping", () => expect(_package.status).toBe(STATUS_TYPES.OUT_FOR_DELIVERY));
 
-      it("has a service of first class package", () =>
-        expect(_package.service).toBe("Package Services"));
+      it("has a service of first class package", () => expect(_package.service).toBe("Package Services"));
 
-      it("has a destination of Chicago", () =>
-        expect(_package.destination).toBe("New York, NY 10010"));
+      it("has a destination of Chicago", () => expect(_package.destination).toBe("New York, NY 10010"));
 
       it("has 5 activities", () => {
         expect(_package.activities).toHaveLength(5);
@@ -215,26 +178,18 @@ describe("usps client", () => {
 
     describe("out-for-delivery package with predicted delivery date", () => {
       beforeAll((done) =>
-        fs.readFile(
-          "test/stub_data/usps_predicted_eta.xml",
-          "utf8",
-          (err, xmlDoc) => {
-            handleError(err);
-            _uspsClient
-              .presentResponse(xmlDoc, { trackingNumber: "trk" })
-              .then(({ err: respErr, presentedResponse: resp }) => {
-                expect(respErr).toBeFalsy();
-                _package = resp;
-                return done();
-              }, handleError);
-          }
-        )
+        fs.readFile("test/stub_data/usps_predicted_eta.xml", "utf8", (err, xmlDoc) => {
+          handleError(err);
+          _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            return done();
+          }, handleError);
+        })
       );
 
       it("has an eta of September 25th", () =>
-        expect(_package.eta).toEqual(
-          moment("2015-09-25T00:00:00.000Z").toDate()
-        ));
+        expect(_package.eta).toEqual(moment("2015-09-25T00:00:00.000Z").toDate()));
     });
   });
 });

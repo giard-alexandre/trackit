@@ -2,13 +2,7 @@ import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 const LOCATION_STATES: Map<string, string> = new Map([
   ["Ontario", "CA"],
@@ -52,10 +46,7 @@ interface IOnTracRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 
-class OnTracClient extends ShipperClient<
-  IOnTracShipment,
-  IOnTracRequestOptions
-> {
+class OnTracClient extends ShipperClient<IOnTracShipment, IOnTracRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["DELIVERED", STATUS_TYPES.DELIVERED],
     ["OUT FOR DELIVERY", STATUS_TYPES.OUT_FOR_DELIVERY],
@@ -64,9 +55,7 @@ class OnTracClient extends ShipperClient<
     ["DATA ENTRY", STATUS_TYPES.SHIPPING],
   ]);
 
-  async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IOnTracShipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<IOnTracShipment>> {
     const data = load(response, { normalizeWhitespace: true });
     return Promise.resolve({ shipment: data });
   }
@@ -142,11 +131,9 @@ class OnTracClient extends ShipperClient<
     return moment(new Date(`${ts} +0000`)).toDate();
   }
 
-  getActivitiesAndStatus(shipment: cheerio.Root): IShipmentActivities {
+  getActivitiesAndStatus(shipment: cheerio.Root): IActivitiesAndStatus {
     const activities = [];
-    const status = this.presentStatus(
-      this.extractSummaryField(shipment, /Delivery Status/)
-    );
+    const status = this.presentStatus(this.extractSummaryField(shipment, /Delivery Status/));
     const $ = shipment;
     if ($ == null) {
       return { activities, status };
@@ -183,9 +170,7 @@ class OnTracClient extends ShipperClient<
     return this.presentLocationString(destination);
   }
 
-  requestOptions({
-    trackingNumber,
-  }: IOnTracRequestOptions): AxiosRequestConfig {
+  requestOptions({ trackingNumber }: IOnTracRequestOptions): AxiosRequestConfig {
     return {
       method: "GET",
       url: `https://www.ontrac.com/trackingdetail.asp?tracking=${trackingNumber}&run=0`,

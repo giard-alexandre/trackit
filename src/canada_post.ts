@@ -2,8 +2,8 @@ import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import {
+  IActivitiesAndStatus,
   IActivity,
-  IShipmentActivities,
   IShipperClientOptions,
   IShipperResponse,
   ShipperClient,
@@ -41,10 +41,7 @@ interface ICanadaPostResponse {
   "tracking-detail": ICanadaPostShipment;
 }
 
-class CanadaPostClient extends ShipperClient<
-  ICanadaPostShipment,
-  ICanadaPostRequestOptions
-> {
+class CanadaPostClient extends ShipperClient<ICanadaPostShipment, ICanadaPostRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["in transit", STATUS_TYPES.EN_ROUTE],
     ["processed", STATUS_TYPES.EN_ROUTE],
@@ -78,22 +75,18 @@ class CanadaPostClient extends ShipperClient<
     this.parser = new Parser();
   }
 
-  async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<ICanadaPostShipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<ICanadaPostShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<ICanadaPostResponse>(
-        (resolve, reject) => {
-          this.parser.parseString(response, (xmlErr, trackResult) => {
-            if (xmlErr) {
-              reject(xmlErr);
-            } else {
-              resolve(trackResult);
-            }
-          });
-        }
-      );
+      const trackResult = await new Promise<ICanadaPostResponse>((resolve, reject) => {
+        this.parser.parseString(response, (xmlErr, trackResult) => {
+          if (xmlErr) {
+            reject(xmlErr);
+          } else {
+            resolve(trackResult);
+          }
+        });
+      });
 
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
@@ -122,35 +115,26 @@ class CanadaPostClient extends ShipperClient<
   }
 
   getStatus(lastEvent: IActivity): STATUS_TYPES {
-    return this.findStatusFromMap(
-      lastEvent != null ? lastEvent.details : undefined
-    );
+    return this.findStatusFromMap(lastEvent != null ? lastEvent.details : undefined);
   }
 
-  getActivitiesAndStatus(shipment: ICanadaPostShipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: ICanadaPostShipment): IActivitiesAndStatus {
     const activities: IActivity[] = [];
     const events = shipment?.["significant-events"]?.[0]?.occurrence;
     for (const event of events || []) {
-      const city =
-        event["event-site"] != null ? event["event-site"][0] : undefined;
-      const stateCode =
-        event["event-province"] != null
-          ? event["event-province"][0]
-          : undefined;
+      const city = event["event-site"] != null ? event["event-site"][0] : undefined;
+      const stateCode = event["event-province"] != null ? event["event-province"][0] : undefined;
       const location = this.presentLocation({
         city,
         stateCode,
         countryCode: null,
         postalCode: null,
       });
-      const timestampString = `${
-        event["event-date"] != null ? event["event-date"][0] : undefined
-      }T${event["event-time"] != null ? event["event-time"][0] : undefined}Z`;
+      const timestampString = `${event["event-date"] != null ? event["event-date"][0] : undefined}T${
+        event["event-time"] != null ? event["event-time"][0] : undefined
+      }Z`;
       const timestamp = moment(timestampString).toDate();
-      const details =
-        event["event-description"] != null
-          ? event["event-description"][0]
-          : undefined;
+      const details = event["event-description"] != null ? event["event-description"][0] : undefined;
       if (details != null && timestamp != null) {
         const activity: IActivity = {
           timestamp,
@@ -168,12 +152,8 @@ class CanadaPostClient extends ShipperClient<
 
   getEta(shipment: ICanadaPostShipment): Date {
     const ts =
-      (shipment["changed-expected-date"] != null
-        ? shipment["changed-expected-date"][0]
-        : undefined) ||
-      (shipment["expected-delivery-date"] != null
-        ? shipment["expected-delivery-date"][0]
-        : undefined);
+      (shipment["changed-expected-date"] != null ? shipment["changed-expected-date"][0] : undefined) ||
+      (shipment["expected-delivery-date"] != null ? shipment["expected-delivery-date"][0] : undefined);
     if (!(ts != null ? ts.length : undefined)) {
       return;
     }
@@ -183,9 +163,7 @@ class CanadaPostClient extends ShipperClient<
   }
 
   getService(shipment: ICanadaPostShipment): string {
-    return shipment["service-name"] != null
-      ? shipment["service-name"][0]
-      : undefined;
+    return shipment["service-name"] != null ? shipment["service-name"][0] : undefined;
   }
 
   getWeight(): undefined {
@@ -193,14 +171,10 @@ class CanadaPostClient extends ShipperClient<
   }
 
   getDestination(shipment: ICanadaPostShipment): string {
-    return shipment["destination-postal-id"] != null
-      ? shipment["destination-postal-id"][0]
-      : undefined;
+    return shipment["destination-postal-id"] != null ? shipment["destination-postal-id"][0] : undefined;
   }
 
-  public requestOptions(
-    options: ICanadaPostRequestOptions
-  ): AxiosRequestConfig {
+  public requestOptions(options: ICanadaPostRequestOptions): AxiosRequestConfig {
     const { trackingNumber } = options;
     return {
       url: `https://soa-gw.canadapost.ca/vis/track/pin/${trackingNumber}/detail.xml`,

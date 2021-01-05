@@ -1,6 +1,6 @@
+import Axios, { AxiosRequestConfig } from "axios";
 import { titleCase } from "change-case";
 import { endOfDay, startOfDay } from "date-fns";
-import Axios, { AxiosRequestConfig } from "axios";
 
 export enum STATUS_TYPES {
   UNKNOWN = 0,
@@ -42,26 +42,35 @@ export interface IActivity {
   details?: string;
 }
 
-export interface IShipmentActivities {
+export interface IActivitiesAndStatus {
   activities: Array<IActivity>;
   status: STATUS_TYPES;
+}
+
+interface ITrackitResponseData<TRequestOptions> {
+  eta: Date;
+  service: string;
+  weight: string;
+  destination: string;
+  activities: IActivity[];
+  status: STATUS_TYPES;
+  raw: string;
+  request: TRequestOptions;
+}
+
+export interface ITrackitResponse<TRequestOptions> {
+  data?: ITrackitResponseData<TRequestOptions>;
+  err?: Error;
 }
 
 /**
  * @param TShipment The type of the shipment activity
  * @param TRequestOptions The structure of the request options used to build the request to the carrier.
  */
-export abstract class ShipperClient<
-  TShipment,
-  TRequestOptions extends IShipperClientOptions
-> {
-  public abstract async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<TShipment>>;
+export abstract class ShipperClient<TShipment, TRequestOptions extends IShipperClientOptions> {
+  public abstract async validateResponse(response: string): Promise<IShipperResponse<TShipment>>;
 
-  public abstract getActivitiesAndStatus(
-    shipment: TShipment
-  ): IShipmentActivities;
+  public abstract getActivitiesAndStatus(shipment: TShipment): IActivitiesAndStatus;
 
   public abstract getEta(shipment: TShipment): Date;
 
@@ -104,12 +113,7 @@ export abstract class ShipperClient<
     return newFields.join(", ");
   }
 
-  public presentLocation({
-    city,
-    stateCode,
-    countryCode,
-    postalCode,
-  }: ILocation): string {
+  public presentLocation({ city, stateCode, countryCode, postalCode }: ILocation): string {
     let address: string;
     if (city?.length) {
       city = titleCase(city);
@@ -149,7 +153,7 @@ export abstract class ShipperClient<
   public async presentResponse(
     response: string,
     requestData?: TRequestOptions
-  ): Promise<{ err?: Error; presentedResponse?: any }> {
+  ): Promise<ITrackitResponse<TRequestOptions>> {
     const { err, shipment } = await this.validateResponse(response);
     let adjustedEta: Date;
     if (err != null || shipment == null) {
@@ -163,7 +167,7 @@ export abstract class ShipperClient<
     if (adjustedEta === null) {
       adjustedEta = eta;
     }
-    const presentedResponse = {
+    const presentedResponse: ITrackitResponseData<TRequestOptions> = {
       eta: adjustedEta || eta,
       service: this.getService(shipment),
       weight: this.getWeight(shipment),
@@ -177,12 +181,10 @@ export abstract class ShipperClient<
       presentedResponse.raw = response;
     }
     presentedResponse.request = requestData;
-    return { err: null, presentedResponse: presentedResponse };
+    return { err: null, data: presentedResponse };
   }
 
-  public async requestData(
-    requestData: TRequestOptions
-  ): Promise<{ err?: Error; data?: any }> {
+  public async requestData(requestData: TRequestOptions): Promise<ITrackitResponse<TRequestOptions>> {
     const req = this.requestOptions(requestData);
     req.responseType = "text";
     req.timeout = requestData?.timeout || this.options?.timeout;
@@ -196,7 +198,7 @@ export abstract class ShipperClient<
         return { err: new Error(`response status ${response.status}`) };
       }
       const presentedResponse = await this.presentResponse(body, requestData);
-      return { data: presentedResponse };
+      return { ...presentedResponse };
     } catch (e) {
       return { err: e as Error };
     }

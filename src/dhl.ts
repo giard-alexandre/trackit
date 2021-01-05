@@ -1,13 +1,7 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
-import {
-  IShipmentActivities,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
-  STATUS_TYPES,
-} from "./shipper";
+import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
 
 interface IDhlClientOptions extends IShipperClientOptions {
   userId: string;
@@ -126,9 +120,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
 `;
   }
 
-  async validateResponse(
-    response: string
-  ): Promise<IShipperResponse<IDhlShipment>> {
+  async validateResponse(response: string): Promise<IShipperResponse<IDhlShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<IDhlResponse>((resolve, reject) => {
@@ -149,22 +141,16 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
       if (trackingResponse == null) {
         return { err: new Error("no tracking response") };
       }
-      const awbInfo =
-        trackingResponse.AWBInfo != null
-          ? trackingResponse.AWBInfo[0]
-          : undefined;
+      const awbInfo = trackingResponse.AWBInfo != null ? trackingResponse.AWBInfo[0] : undefined;
       if (awbInfo == null) {
         return { err: new Error("no AWBInfo in response") };
       }
-      const shipment =
-        awbInfo.ShipmentInfo != null ? awbInfo.ShipmentInfo[0] : undefined;
+      const shipment = awbInfo.ShipmentInfo != null ? awbInfo.ShipmentInfo[0] : undefined;
       if (shipment == null) {
         return { err: new Error("could not find shipment") };
       }
-      const trackStatus =
-        awbInfo.Status != null ? awbInfo.Status[0] : undefined;
-      const statusCode =
-        trackStatus != null ? trackStatus.ActionStatus : undefined;
+      const trackStatus = awbInfo.Status != null ? awbInfo.Status[0] : undefined;
+      const statusCode = trackStatus != null ? trackStatus.ActionStatus : undefined;
       if (statusCode.toString() !== "success") {
         return { err: new Error(`unexpected track status code=${statusCode}`) };
       }
@@ -175,8 +161,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
   }
 
   getEta(shipment: IDhlShipment): Date {
-    const eta =
-      shipment.EstDlvyDate != null ? shipment.EstDlvyDate[0] : undefined;
+    const eta = shipment.EstDlvyDate != null ? shipment.EstDlvyDate[0] : undefined;
     const formatSpec = "YYYYMMDD HHmmss ZZ";
     if (eta != null) {
       return moment(eta, formatSpec).toDate();
@@ -251,7 +236,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
     return this.STATUS_MAP.get(status) || STATUS_TYPES.UNKNOWN;
   }
 
-  getActivitiesAndStatus(shipment: IDhlShipment): IShipmentActivities {
+  getActivitiesAndStatus(shipment: IDhlShipment): IActivitiesAndStatus {
     const activities = [];
     let status = STATUS_TYPES.UNKNOWN;
     let rawActivities: IDhlRawActivity[] = shipment.ShipmentEvent;
@@ -266,22 +251,14 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
         rawActivity.Date != null ? rawActivity.Date[0] : undefined,
         rawActivity.Time != null ? rawActivity.Time[0] : undefined
       );
-      let details = this.presentDetails(
-        rawLocation,
-        rawActivity?.ServiceEvent?.[0]?.Description?.[0]
-      );
+      let details = this.presentDetails(rawLocation, rawActivity?.ServiceEvent?.[0]?.Description?.[0]);
       if (details != null && timestamp != null) {
-        details =
-          details.slice(-1) === "."
-            ? details.slice(0, +-2 + 1 || undefined)
-            : details;
+        details = details.slice(-1) === "." ? details.slice(0, +-2 + 1 || undefined) : details;
         const activity = { timestamp, location, details };
         activities.push(activity);
       }
       if (!status) {
-        status = this.presentStatus(
-          rawActivity?.ServiceEvent?.[0]?.EventCode?.[0]
-        );
+        status = this.presentStatus(rawActivity?.ServiceEvent?.[0]?.EventCode?.[0]);
       }
     }
     return { activities, status };
