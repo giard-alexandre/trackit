@@ -1,27 +1,7 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+import { AxiosRequestConfig } from "axios";
 import fs from "fs";
-import { PrestigeClient } from "../src/prestige";
-import { STATUS_TYPES } from "../src/shipper";
+import { IPrestigeRequestOptions, PrestigeClient } from "../src/prestige";
+import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
 const handleError = (e: unknown) => {
   if (e) {
@@ -35,7 +15,7 @@ describe("prestige client", () => {
   beforeAll(() => (_presClient = new PrestigeClient({})));
 
   describe("requestOptions", () => {
-    let _options = null;
+    let _options: AxiosRequestConfig = null;
 
     beforeAll(
       () =>
@@ -51,8 +31,8 @@ describe("prestige client", () => {
   });
 
   describe("integration tests", () => {
-    let _package = null;
-    let _activity = null;
+    let _package: ITrackitResponseData<IPrestigeRequestOptions> = null;
+    let _activity: IActivity = null;
 
     describe("out for delivery package", () => {
       beforeAll((done) =>

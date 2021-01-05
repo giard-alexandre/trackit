@@ -30,7 +30,7 @@ interface IPrestigeShipment {
   Pieces?: IPrestigeShipmentPiece[];
 }
 
-interface IPrestigeRequestOptions extends IShipperClientOptions {
+export interface IPrestigeRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 
