@@ -47,7 +47,7 @@ export interface IActivitiesAndStatus {
   status: STATUS_TYPES;
 }
 
-interface ITrackitResponseData<TRequestOptions> {
+export interface ITrackitResponseData<TRequestOptions> {
   eta: Date;
   service: string;
   weight: string;

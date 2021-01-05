@@ -1,20 +1,6 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import * as fs from "fs";
-import { A1Client } from "../src/a1";
-import { STATUS_TYPES } from "../src/shipper";
+import { A1Client, IA1RequestOptions } from "../src/a1";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
 const handleError = (e: any) => {
   if (e) {
@@ -29,15 +15,16 @@ describe("a1 client", () => {
 
   describe("integration tests", () => {
     describe("in transit package", () => {
-      let _package = null;
+      let _package: ITrackitResponseData<IA1RequestOptions>;
 
       beforeAll((done) =>
         fs.readFile("test/stub_data/a1_shipping.xml", "utf8", (err, xmlDoc) => {
           handleError(err);
           _a1Client.presentResponse(xmlDoc).then(({ err, data }) => {
             expect(err).toBeFalsy();
+            expect(data).toBeTruthy();
             _package = data;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -60,7 +47,7 @@ describe("a1 client", () => {
     });
 
     describe("delivered package", () => {
-      let _package = null;
+      let _package: ITrackitResponseData<IA1RequestOptions>;
 
       beforeAll((done) =>
         fs.readFile("test/stub_data/a1_delivered.xml", "utf8", (err, xmlDoc) => {
@@ -68,7 +55,7 @@ describe("a1 client", () => {
           _a1Client.presentResponse(xmlDoc).then(({ err, data }) => {
             expect(err).toBeFalsy();
             _package = data;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -91,7 +78,7 @@ describe("a1 client", () => {
     });
 
     describe("package error", () => {
-      let _package = null;
+      let _package: ITrackitResponseData<IA1RequestOptions>;
       let _err = null;
 
       beforeAll((done) =>
@@ -100,7 +87,7 @@ describe("a1 client", () => {
           _a1Client.presentResponse(xmlDoc).then(({ err, data }) => {
             _package = data;
             _err = err;
-            return done();
+            done();
           }, handleError);
         })
       );

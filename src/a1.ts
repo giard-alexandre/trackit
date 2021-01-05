@@ -35,7 +35,7 @@ interface IA1Shipment {
   TrackingNumber: string;
 }
 
-interface IA1RequestOptions extends IShipperClientOptions {
+export interface IA1RequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 
