@@ -1,29 +1,8 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import fs from "fs";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
-import { STATUS_TYPES } from "../src/shipper";
-import { UspsClient } from "../src/usps";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
+import { IUspsRequestOptions, UspsClient } from "../src/usps";
 
 const handleError = (e: unknown) => {
   if (e) {
@@ -43,50 +22,55 @@ describe("usps client", () => {
     beforeAll(() => (_xmlDoc = _uspsClient.generateRequest("9400111899560008231892", "10.10.5.2")));
 
     it("includes TrackFieldRequest in the track request document", (done) =>
-      _xmlParser.parseString(_xmlDoc, function (err, doc) {
+      _xmlParser.parseString(_xmlDoc, (err, doc) => {
         handleError(err);
         expect(doc).toHaveProperty("TrackFieldRequest");
         done();
       }));
 
     it("includes user ID in the track field request", (done) =>
-      _xmlParser.parseString(_xmlDoc, function (err, doc) {
+      _xmlParser.parseString(_xmlDoc, (err, doc) => {
         handleError(err);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(doc.TrackFieldRequest.$.USERID).toBe("hello-neuman");
         done();
       }));
 
     it("includes revision 1 in the track field request", (done) =>
-      _xmlParser.parseString(_xmlDoc, function (err, doc) {
+      _xmlParser.parseString(_xmlDoc, (err, doc) => {
         handleError(err);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(doc.TrackFieldRequest.Revision[0]).toBe("1");
         done();
       }));
 
     it("includes client IP in the track field request", (done) =>
-      _xmlParser.parseString(_xmlDoc, function (err, doc) {
+      _xmlParser.parseString(_xmlDoc, (err, doc) => {
         handleError(err);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(doc.TrackFieldRequest.ClientIp[0]).toBe("10.10.5.2");
         done();
       }));
 
     it("includes source ID in the track field request", (done) =>
-      _xmlParser.parseString(_xmlDoc, function (err, doc) {
+      _xmlParser.parseString(_xmlDoc, (err, doc) => {
         handleError(err);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(doc.TrackFieldRequest.SourceId[0]).toBe("shipit");
         done();
       }));
 
     it("includes track ID in the track field request", (done) =>
-      _xmlParser.parseString(_xmlDoc, function (err, doc) {
+      _xmlParser.parseString(_xmlDoc, (err, doc) => {
         handleError(err);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(doc.TrackFieldRequest.TrackID[0].$.ID).toBe("9400111899560008231892");
         done();
       }));
   });
 
   describe("integration tests", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<IUspsRequestOptions> = null;
 
     describe("pre-shipment package", () => {
       beforeAll((done) =>
@@ -149,7 +133,7 @@ describe("usps client", () => {
       beforeAll((done) =>
         fs.readFile("test/stub_data/usps_out_for_delivery.xml", "utf8", (err, xmlDoc) => {
           handleError(err);
-          _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+          _uspsClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: _, data: resp }) => {
             expect(err).toBeFalsy();
             _package = resp;
             done();

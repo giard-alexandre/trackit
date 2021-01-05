@@ -45,7 +45,7 @@ interface IUspsTrackResult {
   };
 }
 
-interface IUspsRequestOptions extends IShipperClientOptions {
+export interface IUspsRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
   clientIp?: string;
   test?: boolean;
