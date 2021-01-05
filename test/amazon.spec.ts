@@ -1,17 +1,3 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
 import { addDays, getDate, getYear, set, setDay } from "date-fns";
 // TODO: This file was created by bulk-decaffeinate.
 // Fix any style issues and re-enable lint.
@@ -22,8 +8,8 @@ import { addDays, getDate, getYear, set, setDay } from "date-fns";
  */
 import fs from "fs";
 import moment from "moment-timezone";
-import { AmazonClient } from "../src/amazon";
-import { STATUS_TYPES } from "../src/shipper";
+import { AmazonClient, IAmazonRequestOptions } from "../src/amazon";
+import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
 const handleError = (e: any) => {
   if (e) {
@@ -37,7 +23,7 @@ describe("amazon client", () => {
   beforeAll(() => (_amazonClient = new AmazonClient({})));
 
   describe("integration tests", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<IAmazonRequestOptions> = null;
 
     describe("detects eta", () => {
       it("for delivery tomorrow", (done) =>
@@ -45,7 +31,7 @@ describe("amazon client", () => {
           handleError(err);
           _amazonClient.presentResponse(docs).then(({ err: pkgError, data: pkg }) => {
             expect(getDate(pkg.eta)).toEqual(getDate(addDays(new Date(), 1)));
-            return done();
+            done();
           }, handleError);
         }));
 
@@ -54,7 +40,7 @@ describe("amazon client", () => {
           handleError(err);
           _amazonClient.presentResponse(docs).then(({ err: pgkErr, data: pkg }) => {
             expect(getDate(pkg.eta)).toEqual(getDate(new Date()));
-            return done();
+            done();
           }, handleError);
         }));
 
@@ -70,7 +56,7 @@ describe("amazon client", () => {
               milliseconds: 0,
             });
             expect(pkg.eta).toEqual(expected);
-            return done();
+            done();
           }, handleError);
         }));
 
@@ -81,7 +67,7 @@ describe("amazon client", () => {
             const year = getYear(new Date());
             const expected = new Date(year, 9, 24, 20, 0, 0, 0);
             expect(pkg.eta).toEqual(expected);
-            return done();
+            done();
           }, handleError);
         }));
 
@@ -97,7 +83,7 @@ describe("amazon client", () => {
             });
             arrivalDay = setDay(arrivalDay, 3);
             expect(pkg.eta).toEqual(arrivalDay);
-            return done();
+            done();
           }, handleError);
         }));
     });
@@ -109,7 +95,7 @@ describe("amazon client", () => {
           _amazonClient.presentResponse(docs).then(({ err: pgkErr, data: resp }) => {
             expect(pgkErr).toBeFalsy();
             _package = resp;
-            return done();
+            done();
           }, handleError);
         })
       );
@@ -117,7 +103,7 @@ describe("amazon client", () => {
       it("has a status of en-route", () => expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
 
       describe("has an activity", () => {
-        let _activity = null;
+        let _activity: IActivity = null;
 
         beforeAll(() => (_activity = _package.activities[0]));
 
@@ -130,7 +116,7 @@ describe("amazon client", () => {
       });
 
       describe("has another activity", () => {
-        let _activity = null;
+        let _activity: IActivity = null;
 
         beforeAll(() => (_activity = _package.activities[1]));
 

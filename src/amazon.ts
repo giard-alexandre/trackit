@@ -34,7 +34,7 @@ interface IAmazonShipment {
   };
 }
 
-interface IAmazonRequestOptions extends IShipperClientOptions {
+export interface IAmazonRequestOptions extends IShipperClientOptions {
   orderID: string;
   orderingShipmentId: string;
 }
