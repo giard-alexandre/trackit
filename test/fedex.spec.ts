@@ -1,26 +1,5 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-expressions,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
+/* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access */
 import assert from "assert";
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import * as fs from "fs";
 import { Parser } from "xml2js";
 import { FedexClient } from "../src/fedex";
@@ -53,7 +32,7 @@ describe("fedex client", () => {
     beforeAll(async () => {
       const promise = new Promise((resolve, reject) => {
         const trackXml = _fedexClient.generateRequest("1Z5678", "eloquent shipit");
-        return _xmlParser.parseString(trackXml, function (err, data) {
+        return _xmlParser.parseString(trackXml, (err, data) => {
           handleError(err);
           _trackRequest = data?.["ns:TrackRequest"];
           assert(_trackRequest != null);
