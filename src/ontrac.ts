@@ -42,7 +42,7 @@ const LOCATION_STATES: Map<string, string> = new Map([
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IOnTracShipment {}
 
-interface IOnTracRequestOptions extends IShipperClientOptions {
+export interface IOnTracRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 
