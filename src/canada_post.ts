@@ -15,7 +15,7 @@ interface ICanadaPostClientOptions extends IShipperClientOptions {
   password: string;
 }
 
-interface ICanadaPostRequestOptions extends IShipperClientOptions {
+export interface ICanadaPostRequestOptions extends IShipperClientOptions {
   trackingNumber: string;
 }
 

@@ -1,27 +1,6 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import fs from "fs";
-import { CanadaPostClient } from "../src/canada_post";
-import { STATUS_TYPES } from "../src/shipper";
+import { CanadaPostClient, ICanadaPostRequestOptions } from "../src/canada_post";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
 
 const handleError = (e: any) => {
   if (e) {
@@ -30,7 +9,7 @@ const handleError = (e: any) => {
 };
 
 describe("canada post client", () => {
-  let _canpostClient = null;
+  let _canpostClient: CanadaPostClient = null;
 
   beforeAll(
     () =>
@@ -41,15 +20,15 @@ describe("canada post client", () => {
   );
 
   describe("delivered package", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<ICanadaPostRequestOptions> = null;
 
     beforeAll((done) =>
       fs.readFile("test/stub_data/canada_post_delivered.xml", "utf8", (err, xmlDoc) => {
         handleError(err);
-        _canpostClient.presentResponse(xmlDoc, "trk").then(({ err: respErr, data: resp }) => {
+        _canpostClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
           expect(respErr).toBeFalsy();
           _package = resp;
-          return done();
+          done();
         }, handleError);
       })
     );
@@ -80,15 +59,15 @@ describe("canada post client", () => {
   });
 
   describe("en-route package", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<ICanadaPostRequestOptions> = null;
 
     beforeAll((done) =>
       fs.readFile("test/stub_data/canada_post_en_route.xml", "utf8", (err, xmlDoc) => {
         handleError(err);
-        _canpostClient.presentResponse(xmlDoc, "trk").then(({ err: respErr, data: resp }) => {
+        _canpostClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
           expect(respErr).toBeFalsy();
           _package = resp;
-          return done();
+          done();
         }, handleError);
       })
     );
@@ -119,15 +98,15 @@ describe("canada post client", () => {
   });
 
   describe("shipping package", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<ICanadaPostRequestOptions> = null;
 
     beforeAll((done) =>
       fs.readFile("test/stub_data/canada_post_shipping.xml", "utf8", (err, xmlDoc) => {
         handleError(err);
-        _canpostClient.presentResponse(xmlDoc, "trk").then(({ err: respErr, data: resp }) => {
+        _canpostClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
           expect(respErr).toBeFalsy();
           _package = resp;
-          return done();
+          done();
         }, handleError);
       })
     );
@@ -149,15 +128,15 @@ describe("canada post client", () => {
   });
 
   describe("another delivered package", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<ICanadaPostRequestOptions> = null;
 
     beforeAll((done) =>
       fs.readFile("test/stub_data/canada_post_delivered2.xml", "utf8", (err, xmlDoc) => {
         handleError(err);
-        _canpostClient.presentResponse(xmlDoc, "trk").then(({ err: respErr, data: resp }) => {
+        _canpostClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
           expect(respErr).toBeFalsy();
           _package = resp;
-          return done();
+          done();
         }, handleError);
       })
     );
@@ -166,15 +145,15 @@ describe("canada post client", () => {
   });
 
   describe("delayed package", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<ICanadaPostRequestOptions> = null;
 
     beforeAll((done) =>
       fs.readFile("test/stub_data/canada_post_delayed.xml", "utf8", (err, xmlDoc) => {
         handleError(err);
-        _canpostClient.presentResponse(xmlDoc, "trk").then(({ err: respErr, data: resp }) => {
+        _canpostClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
           expect(respErr).toBeFalsy();
           _package = resp;
-          return done();
+          done();
         }, handleError);
       })
     );
@@ -183,15 +162,15 @@ describe("canada post client", () => {
   });
 
   describe("en-route package with a 'departed' activity", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<ICanadaPostRequestOptions> = null;
 
     beforeAll((done) =>
       fs.readFile("test/stub_data/canada_post_departed.xml", "utf8", (err, xmlDoc) => {
         handleError(err);
-        _canpostClient.presentResponse(xmlDoc, "trk").then(({ err: respErr, data: resp }) => {
+        _canpostClient.presentResponse(xmlDoc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
           expect(respErr).toBeFalsy();
           _package = resp;
-          return done();
+          done();
         }, handleError);
       })
     );
