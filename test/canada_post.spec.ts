@@ -1,6 +1,6 @@
 import fs from "fs";
 import { CanadaPostClient, ICanadaPostRequestOptions } from "../src/canada_post";
-import { ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {
   if (e) {

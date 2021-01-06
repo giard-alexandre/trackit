@@ -3,7 +3,7 @@ import bond from "bondjs";
 import * as fs from "fs";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
-import { STATUS_TYPES } from "../src/shipper";
+import { STATUS_TYPES } from "../src/trackitClient";
 import { IUpsLocation, IUpsShipment, UpsClient } from "../src/ups";
 
 const handleError = (e: unknown) => {

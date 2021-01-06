@@ -2,7 +2,7 @@ import { AxiosRequestConfig } from "axios";
 import fs from "fs";
 import moment from "moment-timezone";
 import { ILasershipRequestOptions, LasershipClient } from "../src/lasership";
-import { ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {
   if (e) {

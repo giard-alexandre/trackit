@@ -1,9 +1,15 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
-interface IDhlClientOptions extends IShipperClientOptions {
+interface IDhlClientOptions extends ITrackitClientOptions {
   userId: string;
   password: string;
 }
@@ -29,7 +35,7 @@ interface IDhlShipment {
   }[];
 }
 
-export interface IDhlRequestOptions extends IShipperClientOptions {
+export interface IDhlRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
@@ -42,7 +48,7 @@ interface IDhlResponse {
   };
 }
 
-class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
+class DhlClient extends TrackitClient<IDhlShipment, IDhlRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["AD", STATUS_TYPES.EN_ROUTE],
     ["AF", STATUS_TYPES.EN_ROUTE],
@@ -120,7 +126,7 @@ class DhlClient extends ShipperClient<IDhlShipment, IDhlRequestOptions> {
 `;
   }
 
-  async validateResponse(response: string): Promise<IShipperResponse<IDhlShipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IDhlShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<IDhlResponse>((resolve, reject) => {

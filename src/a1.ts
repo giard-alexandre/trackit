@@ -4,11 +4,11 @@ import { Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
   IActivity,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
+  ITrackitClientOptions,
+  ICarrierResponse,
+  TrackitClient,
   STATUS_TYPES,
-} from "./shipper";
+} from "./trackitClient";
 
 interface IA1Address {
   City: string[];
@@ -35,7 +35,7 @@ interface IA1Shipment {
   TrackingNumber: string;
 }
 
-export interface IA1RequestOptions extends IShipperClientOptions {
+export interface IA1RequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
@@ -50,7 +50,7 @@ interface IA1TrackResult {
   };
 }
 
-class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
+class A1Client extends TrackitClient<IA1Shipment, IA1RequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["101", STATUS_TYPES.EN_ROUTE],
     ["102", STATUS_TYPES.EN_ROUTE],
@@ -61,12 +61,12 @@ class A1Client extends ShipperClient<IA1Shipment, IA1RequestOptions> {
 
   parser: Parser;
 
-  constructor(options: IShipperClientOptions) {
+  constructor(options: ITrackitClientOptions) {
     super(options);
     this.parser = new Parser();
   }
 
-  async validateResponse(response: string): Promise<IShipperResponse<IA1Shipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IA1Shipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<IA1TrackResult>((resolve, reject) => {

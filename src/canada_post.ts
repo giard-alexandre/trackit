@@ -4,18 +4,18 @@ import { Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
   IActivity,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
+  ITrackitClientOptions,
+  ICarrierResponse,
+  TrackitClient,
   STATUS_TYPES,
-} from "./shipper";
+} from "./trackitClient";
 
-interface ICanadaPostClientOptions extends IShipperClientOptions {
+interface ICanadaPostClientOptions extends ITrackitClientOptions {
   username: string;
   password: string;
 }
 
-export interface ICanadaPostRequestOptions extends IShipperClientOptions {
+export interface ICanadaPostRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
@@ -41,7 +41,7 @@ interface ICanadaPostResponse {
   "tracking-detail": ICanadaPostShipment;
 }
 
-class CanadaPostClient extends ShipperClient<ICanadaPostShipment, ICanadaPostRequestOptions> {
+class CanadaPostClient extends TrackitClient<ICanadaPostShipment, ICanadaPostRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["in transit", STATUS_TYPES.EN_ROUTE],
     ["processed", STATUS_TYPES.EN_ROUTE],
@@ -75,7 +75,7 @@ class CanadaPostClient extends ShipperClient<ICanadaPostShipment, ICanadaPostReq
     this.parser = new Parser();
   }
 
-  async validateResponse(response: string): Promise<IShipperResponse<ICanadaPostShipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<ICanadaPostShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<ICanadaPostResponse>((resolve, reject) => {

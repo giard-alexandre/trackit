@@ -1,6 +1,12 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
 interface ILasershipAddress {
   City: string;
@@ -27,11 +33,11 @@ interface ILasershipShipment {
   Pieces: ILasershipShipmentPiece[];
 }
 
-export interface ILasershipRequestOptions extends IShipperClientOptions {
+export interface ILasershipRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
-class LasershipClient extends ShipperClient<ILasershipShipment, ILasershipRequestOptions> {
+class LasershipClient extends TrackitClient<ILasershipShipment, ILasershipRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["Released", STATUS_TYPES.DELIVERED],
     ["Delivered", STATUS_TYPES.DELIVERED],
@@ -42,7 +48,7 @@ class LasershipClient extends ShipperClient<ILasershipShipment, ILasershipReques
     ["OrderCreated", STATUS_TYPES.SHIPPING],
   ]);
 
-  validateResponse(responseString: string): Promise<IShipperResponse<ILasershipShipment>> {
+  validateResponse(responseString: string): Promise<ICarrierResponse<ILasershipShipment>> {
     try {
       const response = JSON.parse(responseString) as ILasershipShipment;
       if (response.Events == null) {

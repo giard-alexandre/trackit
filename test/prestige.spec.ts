@@ -1,7 +1,7 @@
 import { AxiosRequestConfig } from "axios";
 import fs from "fs";
 import { IPrestigeRequestOptions, PrestigeClient } from "../src/prestige";
-import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
+import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {
   if (e) {

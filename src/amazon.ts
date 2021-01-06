@@ -1,7 +1,13 @@
 import { AxiosRequestConfig } from "axios";
 import { load } from "cheerio";
 import { addDays, isValid, set, setDay } from "date-fns";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
 const MONTHS = [
   /JANUARY/,
@@ -34,12 +40,12 @@ interface IAmazonShipment {
   };
 }
 
-export interface IAmazonRequestOptions extends IShipperClientOptions {
+export interface IAmazonRequestOptions extends ITrackitClientOptions {
   orderID: string;
   orderingShipmentId: string;
 }
 
-class AmazonClient extends ShipperClient<IAmazonShipment, IAmazonRequestOptions> {
+class AmazonClient extends TrackitClient<IAmazonShipment, IAmazonRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["ORDERED", STATUS_TYPES.SHIPPING],
     ["SHIPPED", STATUS_TYPES.EN_ROUTE],
@@ -48,7 +54,7 @@ class AmazonClient extends ShipperClient<IAmazonShipment, IAmazonRequestOptions>
     ["DELIVERED", STATUS_TYPES.DELIVERED],
   ]);
 
-  async validateResponse(response: string): Promise<IShipperResponse<IAmazonShipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IAmazonShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
 
     return Promise.resolve({ err: null, shipment: { $, response } });

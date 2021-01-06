@@ -2,9 +2,15 @@ import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import moment from "moment-timezone";
 import { Builder, Parser } from "xml2js";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
-interface IUpsClientOptions extends IShipperClientOptions {
+interface IUpsClientOptions extends ITrackitClientOptions {
   userId: string;
   password: string;
   licenseNumber: string;
@@ -74,13 +80,13 @@ export interface IUpsTrackResult {
   };
 }
 
-interface IUpsRequestOptions extends IShipperClientOptions {
+interface IUpsRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
   reference?: string;
   test?: boolean;
 }
 
-class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
+class UpsClient extends TrackitClient<IUpsShipment, IUpsRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["D", STATUS_TYPES.DELIVERED],
     ["P", STATUS_TYPES.EN_ROUTE],
@@ -141,7 +147,7 @@ class UpsClient extends ShipperClient<IUpsShipment, IUpsRequestOptions> {
     return `${accessRequest}${trackRequest}`;
   }
 
-  async validateResponse(response: string): Promise<IShipperResponse<IUpsShipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IUpsShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<IUpsTrackResult>((resolve, reject) => {

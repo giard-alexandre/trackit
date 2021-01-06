@@ -2,16 +2,22 @@ import { AxiosRequestConfig } from "axios";
 import { upperCaseFirst } from "change-case";
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IDhlgmShipment {}
 
-export interface IDhlgmRequestOptions extends IShipperClientOptions {
+export interface IDhlgmRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
-class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
+class DhlGmClient extends TrackitClient<IDhlgmShipment, IDhlgmRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["electronic notification received", STATUS_TYPES.SHIPPING],
     ["out for delivery", STATUS_TYPES.OUT_FOR_DELIVERY],
@@ -27,7 +33,7 @@ class DhlGmClient extends ShipperClient<IDhlgmShipment, IDhlgmRequestOptions> {
     ["delivered", STATUS_TYPES.DELIVERED],
   ]);
 
-  validateResponse(response: string): Promise<IShipperResponse<IDhlgmShipment>> {
+  validateResponse(response: string): Promise<ICarrierResponse<IDhlgmShipment>> {
     try {
       response = response.replace(/<br>/gi, " ");
       return Promise.resolve({

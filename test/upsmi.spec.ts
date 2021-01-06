@@ -1,5 +1,5 @@
 import fs from "fs";
-import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
+import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 import { IUpsmiRequestOptions, UpsMiClient } from "../src/upsmi";
 
 const handleError = (e: unknown) => {

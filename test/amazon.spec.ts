@@ -2,7 +2,7 @@ import { addDays, getDate, getYear, set, setDay } from "date-fns";
 import fs from "fs";
 import moment from "moment-timezone";
 import { AmazonClient, IAmazonRequestOptions } from "../src/amazon";
-import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/shipper";
+import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {
   if (e) {

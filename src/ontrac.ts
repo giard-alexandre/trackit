@@ -2,7 +2,13 @@ import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import { load } from "cheerio";
 import moment from "moment-timezone";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
 const LOCATION_STATES: Map<string, string> = new Map([
   ["Ontario", "CA"],
@@ -42,11 +48,11 @@ const LOCATION_STATES: Map<string, string> = new Map([
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IOnTracShipment {}
 
-export interface IOnTracRequestOptions extends IShipperClientOptions {
+export interface IOnTracRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
-class OnTracClient extends ShipperClient<IOnTracShipment, IOnTracRequestOptions> {
+class OnTracClient extends TrackitClient<IOnTracShipment, IOnTracRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["DELIVERED", STATUS_TYPES.DELIVERED],
     ["OUT FOR DELIVERY", STATUS_TYPES.OUT_FOR_DELIVERY],
@@ -55,7 +61,7 @@ class OnTracClient extends ShipperClient<IOnTracShipment, IOnTracRequestOptions>
     ["DATA ENTRY", STATUS_TYPES.SHIPPING],
   ]);
 
-  async validateResponse(response: string): Promise<IShipperResponse<IOnTracShipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IOnTracShipment>> {
     const data = load(response, { normalizeWhitespace: true });
     return Promise.resolve({ shipment: data });
   }

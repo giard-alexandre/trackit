@@ -4,11 +4,11 @@ import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   IActivity,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
+  ITrackitClientOptions,
+  ICarrierResponse,
+  TrackitClient,
   STATUS_TYPES,
-} from "./shipper";
+} from "./trackitClient";
 
 interface IUpsmiShipment {
   $: cheerio.Root;
@@ -17,11 +17,11 @@ interface IUpsmiShipment {
   miDetails: cheerio.Cheerio;
 }
 
-export interface IUpsmiRequestOptions extends IShipperClientOptions {
+export interface IUpsmiRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
-class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
+class UpsMiClient extends TrackitClient<IUpsmiShipment, IUpsmiRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["post office entry", STATUS_TYPES.EN_ROUTE],
     ["out for post office delivery", STATUS_TYPES.OUT_FOR_DELIVERY],
@@ -33,7 +33,7 @@ class UpsMiClient extends ShipperClient<IUpsmiShipment, IUpsmiRequestOptions> {
     ["sorted", STATUS_TYPES.EN_ROUTE],
   ]);
 
-  validateResponse(response: string): Promise<IShipperResponse<IUpsmiShipment>> {
+  validateResponse(response: string): Promise<ICarrierResponse<IUpsmiShipment>> {
     const $ = load(response, { normalizeWhitespace: true });
     const summary = $("#Table6")?.find("table")?.[0];
     const uspsDetails = $("#ctl00_mainContent_ctl00_pnlUSPS > table");

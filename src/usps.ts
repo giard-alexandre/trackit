@@ -3,13 +3,13 @@ import { Builder, Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
   IActivity,
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
+  ITrackitClientOptions,
+  ICarrierResponse,
+  TrackitClient,
   STATUS_TYPES,
-} from "./shipper";
+} from "./trackitClient";
 
-interface IUspsClientOptions extends IShipperClientOptions {
+interface IUspsClientOptions extends ITrackitClientOptions {
   userId: string;
 }
 
@@ -45,13 +45,13 @@ interface IUspsTrackResult {
   };
 }
 
-export interface IUspsRequestOptions extends IShipperClientOptions {
+export interface IUspsRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
   clientIp?: string;
   test?: boolean;
 }
 
-class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
+class UspsClient extends TrackitClient<IUspsShipment, IUspsRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["Accept", STATUS_TYPES.EN_ROUTE],
     ["Processed", STATUS_TYPES.EN_ROUTE],
@@ -112,7 +112,7 @@ class UspsClient extends ShipperClient<IUspsShipment, IUspsRequestOptions> {
     });
   }
 
-  async validateResponse(response: string): Promise<IShipperResponse<IUspsShipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IUspsShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<IUspsTrackResult>((resolve, reject) => {

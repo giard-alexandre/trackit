@@ -1,6 +1,12 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
 interface IPrestigeRawActivity {
   CountryCode: string;
@@ -30,20 +36,20 @@ interface IPrestigeShipment {
   Pieces?: IPrestigeShipmentPiece[];
 }
 
-export interface IPrestigeRequestOptions extends IShipperClientOptions {
+export interface IPrestigeRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
 }
 
 const ADDR_ATTRS = ["City", "State", "Zip"];
 
-class PrestigeClient extends ShipperClient<IPrestigeShipment, IPrestigeRequestOptions> {
+class PrestigeClient extends TrackitClient<IPrestigeShipment, IPrestigeRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["301", STATUS_TYPES.DELIVERED],
     ["302", STATUS_TYPES.OUT_FOR_DELIVERY],
     ["101", STATUS_TYPES.SHIPPING],
   ]);
 
-  async validateResponse(responseString: string): Promise<IShipperResponse<IPrestigeShipment>> {
+  async validateResponse(responseString: string): Promise<ICarrierResponse<IPrestigeShipment>> {
     const responseArray = JSON.parse(responseString) as IPrestigeShipment[];
     if (!(responseArray != null ? responseArray.length : undefined)) {
       return await Promise.resolve({

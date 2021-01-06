@@ -11,7 +11,7 @@ export enum STATUS_TYPES {
   DELAYED = 5,
 }
 
-export interface IShipperClientOptions {
+export interface ITrackitClientOptions {
   /**
    * Response includes the raw response received from the shipping carrier API.
    */
@@ -23,7 +23,7 @@ export interface IShipperClientOptions {
   timeout?: number;
 }
 
-export interface IShipperResponse<T> {
+export interface ICarrierResponse<T> {
   err?: Error;
   shipment?: T;
 }
@@ -67,8 +67,8 @@ export interface ITrackitResponse<TRequestOptions> {
  * @param TShipment The type of the shipment activity
  * @param TRequestOptions The structure of the request options used to build the request to the carrier.
  */
-export abstract class ShipperClient<TShipment, TRequestOptions extends IShipperClientOptions> {
-  public abstract async validateResponse(response: string): Promise<IShipperResponse<TShipment>>;
+export abstract class TrackitClient<TShipment, TRequestOptions extends ITrackitClientOptions> {
+  public abstract async validateResponse(response: string): Promise<ICarrierResponse<TShipment>>;
 
   public abstract getActivitiesAndStatus(shipment: TShipment): IActivitiesAndStatus;
 
@@ -82,9 +82,9 @@ export abstract class ShipperClient<TShipment, TRequestOptions extends IShipperC
 
   public abstract requestOptions(options: TRequestOptions): AxiosRequestConfig;
 
-  public options: IShipperClientOptions = { timeout: 2000 };
+  public options: ITrackitClientOptions = { timeout: 2000 };
 
-  constructor(options?: IShipperClientOptions) {
+  constructor(options?: ITrackitClientOptions) {
     this.options = {
       ...this.options,
       ...options,

@@ -1,7 +1,13 @@
 import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
 import { Builder, Parser } from "xml2js";
-import { IActivitiesAndStatus, IShipperClientOptions, IShipperResponse, ShipperClient, STATUS_TYPES } from "./shipper";
+import {
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  STATUS_TYPES,
+  TrackitClient,
+} from "./trackitClient";
 
 interface IFedexAddress {
   City: string[];
@@ -10,7 +16,7 @@ interface IFedexAddress {
   PostalCode: string[];
 }
 
-interface IFedexClientOptions extends IShipperClientOptions {
+interface IFedexClientOptions extends ITrackitClientOptions {
   account: string;
   password: string;
   key: string;
@@ -44,12 +50,12 @@ interface IFedexTrackResult {
   };
 }
 
-interface IFedexRequestOptions extends IShipperClientOptions {
+interface IFedexRequestOptions extends ITrackitClientOptions {
   trackingNumber: string;
   reference: string;
 }
 
-export class FedexClient extends ShipperClient<IFedexShipment, IFedexRequestOptions> {
+export class FedexClient extends TrackitClient<IFedexShipment, IFedexRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["AA", STATUS_TYPES.EN_ROUTE],
     ["AD", STATUS_TYPES.EN_ROUTE],
@@ -153,7 +159,7 @@ export class FedexClient extends ShipperClient<IFedexShipment, IFedexRequestOpti
     });
   }
 
-  async validateResponse(response: string): Promise<IShipperResponse<IFedexShipment>> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IFedexShipment>> {
     this.parser.reset();
     try {
       const trackResult = await new Promise<IFedexTrackResult>((resolve, reject) => {
