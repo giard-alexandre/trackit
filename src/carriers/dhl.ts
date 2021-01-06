@@ -7,7 +7,7 @@ import {
   ITrackitClientOptions,
   STATUS_TYPES,
   TrackitClient,
-} from "./trackitClient";
+} from "../trackitClient";
 
 interface IDhlClientOptions extends ITrackitClientOptions {
   userId: string;

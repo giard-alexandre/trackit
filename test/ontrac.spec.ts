@@ -1,5 +1,5 @@
 import fs from "fs";
-import { IOnTracRequestOptions, OnTracClient } from "../src/ontrac";
+import { IOnTracRequestOptions, OnTracClient } from "../src/carriers/ontrac";
 import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {

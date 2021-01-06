@@ -7,7 +7,7 @@ import {
   ICarrierResponse,
   TrackitClient,
   STATUS_TYPES,
-} from "./trackitClient";
+} from "../trackitClient";
 
 interface IUspsClientOptions extends ITrackitClientOptions {
   userId: string;

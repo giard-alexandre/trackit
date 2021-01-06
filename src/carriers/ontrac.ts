@@ -8,7 +8,7 @@ import {
   ITrackitClientOptions,
   STATUS_TYPES,
   TrackitClient,
-} from "./trackitClient";
+} from "../trackitClient";
 
 const LOCATION_STATES: Map<string, string> = new Map([
   ["Ontario", "CA"],

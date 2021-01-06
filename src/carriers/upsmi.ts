@@ -8,7 +8,7 @@ import {
   ICarrierResponse,
   TrackitClient,
   STATUS_TYPES,
-} from "./trackitClient";
+} from "../trackitClient";
 
 interface IUpsmiShipment {
   $: cheerio.Root;

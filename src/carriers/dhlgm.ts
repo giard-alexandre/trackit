@@ -8,7 +8,7 @@ import {
   ITrackitClientOptions,
   STATUS_TYPES,
   TrackitClient,
-} from "./trackitClient";
+} from "../trackitClient";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IDhlgmShipment {}

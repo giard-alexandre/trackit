@@ -6,7 +6,7 @@ import {
   ITrackitClientOptions,
   STATUS_TYPES,
   TrackitClient,
-} from "./trackitClient";
+} from "../trackitClient";
 
 interface ILasershipAddress {
   City: string;

@@ -4,7 +4,7 @@ import * as fs from "fs";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import { STATUS_TYPES } from "../src/trackitClient";
-import { IUpsLocation, IUpsShipment, UpsClient } from "../src/ups";
+import { IUpsLocation, IUpsShipment, UpsClient } from "../src/carriers/ups";
 
 const handleError = (e: unknown) => {
   if (e) {
@@ -620,9 +620,8 @@ describe("ups client", () => {
       it("has destination of anytown", () => expect(_package.destination).toBe("Anytown, GA 30304"));
 
       it("has 6 activities with timestamp, location and details", () => {
-        let act;
         expect(_package.activities).toHaveLength(1);
-        act = _package.activities[0];
+        const act = _package.activities[0];
         // Todo: Add test for timestamp, location and details
       });
     });

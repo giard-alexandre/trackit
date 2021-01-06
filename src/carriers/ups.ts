@@ -8,7 +8,7 @@ import {
   ITrackitClientOptions,
   STATUS_TYPES,
   TrackitClient,
-} from "./trackitClient";
+} from "../trackitClient";
 
 interface IUpsClientOptions extends ITrackitClientOptions {
   userId: string;

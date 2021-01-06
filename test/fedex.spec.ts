@@ -2,7 +2,7 @@
 import assert from "assert";
 import * as fs from "fs";
 import { Parser } from "xml2js";
-import { FedexClient } from "../src/fedex";
+import { FedexClient } from "../src/carriers/fedex";
 import { STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {

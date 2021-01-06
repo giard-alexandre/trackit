@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { A1Client, IA1RequestOptions } from "../src/a1";
+import { A1Client, IA1RequestOptions } from "../src/carriers/a1";
 import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {

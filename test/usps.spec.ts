@@ -2,7 +2,7 @@ import fs from "fs";
 import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
-import { IUspsRequestOptions, UspsClient } from "../src/usps";
+import { IUspsRequestOptions, UspsClient } from "../src/carriers/usps";
 
 const handleError = (e: unknown) => {
   if (e) {

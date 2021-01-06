@@ -1,4 +1,4 @@
-function CheckDigit(trk: string, multipliers: number[], mod: number): boolean {
+export const CheckDigit = (trk: string, multipliers: number[], mod: 10 | 11): boolean => {
   let checkDigit: number;
   let midX = 0;
   let sum = 0;
@@ -23,6 +23,4 @@ function CheckDigit(trk: string, multipliers: number[], mod: number): boolean {
     }
   }
   return checkDigit === parseInt(trk[trk.length - 1]);
-}
-
-export { CheckDigit };
+};

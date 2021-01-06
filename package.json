@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "jest",
-    "prebuild": "rimraf \"dist/**/*\"",
+	"lint": "eslint \"{src,test}/**/*.ts?(x)\"",
+	"prebuild": "rimraf \"dist/**/*\"",
     "build": "tsc"
   },
   "dependencies": {

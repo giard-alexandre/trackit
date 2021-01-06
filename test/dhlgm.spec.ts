@@ -1,5 +1,5 @@
 import fs from "fs";
-import { DhlGmClient, IDhlgmRequestOptions } from "../src/dhlgm";
+import { DhlGmClient, IDhlgmRequestOptions } from "../src/carriers/dhlgm";
 import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {
