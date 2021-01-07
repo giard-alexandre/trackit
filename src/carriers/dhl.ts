@@ -5,6 +5,7 @@ import {
   IActivitiesAndStatus,
   ICarrierResponse,
   ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
   TrackitClient,
 } from "../trackitClient";
@@ -35,7 +36,7 @@ interface IDhlShipment {
   }[];
 }
 
-export interface IDhlRequestOptions extends ITrackitClientOptions {
+export interface IDhlRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
 }
 

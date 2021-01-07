@@ -4,10 +4,11 @@ import { Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
   IActivity,
-  ITrackitClientOptions,
   ICarrierResponse,
-  TrackitClient,
+  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
+  TrackitClient,
 } from "../trackitClient";
 
 interface IA1Address {
@@ -35,7 +36,7 @@ interface IA1Shipment {
   TrackingNumber: string;
 }
 
-export interface IA1RequestOptions extends ITrackitClientOptions {
+export interface IA1RequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
 }
 

@@ -4,10 +4,11 @@ import { Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
   IActivity,
-  ITrackitClientOptions,
   ICarrierResponse,
-  TrackitClient,
+  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
+  TrackitClient,
 } from "../trackitClient";
 
 interface ICanadaPostClientOptions extends ITrackitClientOptions {
@@ -15,7 +16,7 @@ interface ICanadaPostClientOptions extends ITrackitClientOptions {
   password: string;
 }
 
-export interface ICanadaPostRequestOptions extends ITrackitClientOptions {
+export interface ICanadaPostRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
 }
 

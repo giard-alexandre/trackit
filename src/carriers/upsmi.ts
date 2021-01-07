@@ -4,7 +4,7 @@ import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   IActivity,
-  ITrackitClientOptions,
+  ITrackitRequestOptions,
   ICarrierResponse,
   TrackitClient,
   STATUS_TYPES,
@@ -17,7 +17,7 @@ interface IUpsmiShipment {
   miDetails: cheerio.Cheerio;
 }
 
-export interface IUpsmiRequestOptions extends ITrackitClientOptions {
+export interface IUpsmiRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
 }
 

@@ -6,6 +6,7 @@ import {
   IActivitiesAndStatus,
   ICarrierResponse,
   ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
   TrackitClient,
 } from "../trackitClient";
@@ -80,7 +81,7 @@ export interface IUpsTrackResult {
   };
 }
 
-interface IUpsRequestOptions extends ITrackitClientOptions {
+interface IUpsRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
   reference?: string;
   test?: boolean;
@@ -115,8 +116,6 @@ class UpsClient extends TrackitClient<IUpsShipment, IUpsRequestOptions> {
    */
   constructor(options: IUpsClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
     this.builder = new Builder({ renderOpts: { pretty: false } });
   }

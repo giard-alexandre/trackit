@@ -41,7 +41,7 @@ _*Note*: `trackit-api` Heroku app is not meant for production use, and there are
 
 Add trackit to your `package.json` and then npm install it.
 ```
-npm install trackit
+npm install @heuristical/trackit
 ```
 
 ### Using the API Adapter

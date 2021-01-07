@@ -4,7 +4,7 @@ import { addDays, isValid, set, setDay } from "date-fns";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
-  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
   TrackitClient,
 } from "../trackitClient";
@@ -40,7 +40,7 @@ interface IAmazonShipment {
   };
 }
 
-export interface IAmazonRequestOptions extends ITrackitClientOptions {
+export interface IAmazonRequestOptions extends ITrackitRequestOptions {
   orderID: string;
   orderingShipmentId: string;
 }

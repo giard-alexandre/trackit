@@ -3,10 +3,11 @@ import { Builder, Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
   IActivity,
-  ITrackitClientOptions,
   ICarrierResponse,
-  TrackitClient,
+  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
+  TrackitClient,
 } from "../trackitClient";
 
 interface IUspsClientOptions extends ITrackitClientOptions {
@@ -45,7 +46,7 @@ interface IUspsTrackResult {
   };
 }
 
-export interface IUspsRequestOptions extends ITrackitClientOptions {
+export interface IUspsRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
   clientIp?: string;
   test?: boolean;
@@ -89,8 +90,6 @@ class UspsClient extends TrackitClient<IUspsShipment, IUspsRequestOptions> {
 
   constructor(options: IUspsClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
     this.builder = new Builder({ renderOpts: { pretty: false } });
   }

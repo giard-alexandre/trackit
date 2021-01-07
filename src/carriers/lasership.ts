@@ -3,7 +3,7 @@ import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
-  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
   TrackitClient,
 } from "../trackitClient";
@@ -33,7 +33,7 @@ interface ILasershipShipment {
   Pieces: ILasershipShipmentPiece[];
 }
 
-export interface ILasershipRequestOptions extends ITrackitClientOptions {
+export interface ILasershipRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
 }
 

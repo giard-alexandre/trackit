@@ -11,6 +11,18 @@ export enum STATUS_TYPES {
   DELAYED = 5,
 }
 
+export interface ITrackitRequestOptions {
+  /**
+   * Response includes the raw response received from the shipping carrier API.
+   */
+  raw?: boolean;
+  /**
+   * Number of milliseconds before requests to carriers timeout.
+   * This option can be overridden by a `timeout` attribute in the object passed on to the `requestData()` call.
+   */
+  timeout?: number;
+}
+
 export interface ITrackitClientOptions {
   /**
    * Response includes the raw response received from the shipping carrier API.
@@ -67,8 +79,8 @@ export interface ITrackitResponse<TRequestOptions> {
  * @param TShipment The type of the shipment activity
  * @param TRequestOptions The structure of the request options used to build the request to the carrier.
  */
-export abstract class TrackitClient<TShipment, TRequestOptions extends ITrackitClientOptions> {
-  public abstract async validateResponse(response: string): Promise<ICarrierResponse<TShipment>>;
+export abstract class TrackitClient<TShipment, TRequestOptions extends ITrackitRequestOptions> {
+  public abstract validateResponse(response: string): Promise<ICarrierResponse<TShipment>>;
 
   public abstract getActivitiesAndStatus(shipment: TShipment): IActivitiesAndStatus;
 
@@ -82,7 +94,7 @@ export abstract class TrackitClient<TShipment, TRequestOptions extends ITrackitC
 
   public abstract requestOptions(options: TRequestOptions): AxiosRequestConfig;
 
-  public options: ITrackitClientOptions = { timeout: 2000 };
+  public options: ITrackitRequestOptions = { timeout: 2000 };
 
   constructor(options?: ITrackitClientOptions) {
     this.options = {
@@ -91,7 +103,7 @@ export abstract class TrackitClient<TShipment, TRequestOptions extends ITrackitC
     };
   }
 
-  private presentPostalCode(rawCode: string): string {
+  private static presentPostalCode(rawCode: string): string {
     rawCode = rawCode?.trim() || undefined;
     if (/^\d{9}$/.test(rawCode)) {
       return `${rawCode.slice(0, 5)}-${rawCode.slice(5)}`;
@@ -132,7 +144,7 @@ export abstract class TrackitClient<TShipment, TRequestOptions extends ITrackitC
     } else {
       address = city;
     }
-    postalCode = this.presentPostalCode(postalCode);
+    postalCode = TrackitClient.presentPostalCode(postalCode);
     if (countryCode?.length) {
       countryCode = countryCode.trim();
       if (countryCode.length > 3) {

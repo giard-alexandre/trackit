@@ -5,6 +5,7 @@ import {
   IActivitiesAndStatus,
   ICarrierResponse,
   ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
   TrackitClient,
 } from "../trackitClient";
@@ -16,11 +17,15 @@ interface IFedexAddress {
   PostalCode: string[];
 }
 
-interface IFedexClientOptions extends ITrackitClientOptions {
+export interface IFedexClientOptions extends ITrackitClientOptions {
   account: string;
   password: string;
   key: string;
   meter: string;
+
+  environment?: undefined | "sandbox" | "live";
+  debug?: boolean;
+  imperial?: boolean;
 }
 
 interface IFedexShipment {
@@ -50,9 +55,9 @@ interface IFedexTrackResult {
   };
 }
 
-interface IFedexRequestOptions extends ITrackitClientOptions {
+export interface IFedexRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
-  reference: string;
+  reference?: string;
 }
 
 export class FedexClient extends TrackitClient<IFedexShipment, IFedexRequestOptions> {
@@ -114,8 +119,6 @@ export class FedexClient extends TrackitClient<IFedexShipment, IFedexRequestOpti
 
   constructor(options: IFedexClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
     this.builder = new Builder({ renderOpts: { pretty: false } });
   }

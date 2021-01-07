@@ -5,7 +5,7 @@ import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
-  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
   TrackitClient,
 } from "../trackitClient";
@@ -13,7 +13,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IDhlgmShipment {}
 
-export interface IDhlgmRequestOptions extends ITrackitClientOptions {
+export interface IDhlgmRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
 }
 

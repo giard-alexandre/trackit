@@ -5,7 +5,7 @@ import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
-  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
   TrackitClient,
 } from "../trackitClient";
@@ -48,7 +48,7 @@ const LOCATION_STATES: Map<string, string> = new Map([
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IOnTracShipment {}
 
-export interface IOnTracRequestOptions extends ITrackitClientOptions {
+export interface IOnTracRequestOptions extends ITrackitRequestOptions {
   trackingNumber: string;
 }
 
