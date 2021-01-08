@@ -1,28 +1,50 @@
 ## Disclaimer!
+
 > I am in the process of converting the original coffeescript and callback based project to use Typescript and promises instead. I'll try to keep the below [To-Do](https://github.com/heuristicAL/trackit#conversion-to-do) as up-to-date as possible so feel free to hack away and open up a PR if you wish! I'll be more than happy for the help!
 
 ## What is this?
+
 # Shipping APIs Adapter
-`trackit` is a node module that allows you to retrieve data from shipping carriers like UPS and FedEx in a common format. It interfaces with tracking APIs when available, and falls back to screen scraping. For carriers that expose tracking APIs, user is expected to acquire and provide credentials like license numbers, meter numbers, user IDs and passwords.
+
+`trackit` is a node module that allows you to retrieve data from shipping
+carriers like UPS and FedEx in a common format. It interfaces with tracking APIs
+when available, and falls back to screen scraping. For carriers that expose
+tracking APIs, user is expected to acquire and provide credentials like license
+numbers, meter numbers, user IDs and passwords.
 
 ### Carrier Guessing
-Really, why do users have to know that a tracking number was provided by a particular carrier. That step is just totally unnecessary, given that we can guess the carrier from the tracking number in 90% of the cases. `trackit` provides a convenience function for this.
+
+Really, why do users have to know that a tracking number was provided by a
+particular carrier. That step is just totally unnecessary, given that we can
+guess the carrier from the tracking number in 90% of the cases. `trackit`
+provides a convenience function for this.
 
 ### Try it
-There's a [Heroku](http://www.heroku.com) hobby app that allows you to see `trackit` in action.  For example, try this:
+
+There's a [Heroku](http://www.heroku.com) hobby app that allows you to
+see `trackit` in action. For example, try this:
+
 ```
 http://trackit-api.herokuapp.com/api/carriers/ups/1ZV5E9420444964064
 ```
-And replace `ups` with a [canonical name](https://github.com/sailrish/trackit/blob/master/src/guessCarrier.coffee#L91-L121) for any of the supported carriers, and provide a valid tracking number for that carrier.
+
+And replace `ups` with
+a [canonical name](https://github.com/sailrish/trackit/blob/master/src/guessCarrier.coffee#L91-L121)
+for any of the supported carriers, and provide a valid tracking number for that
+carrier.
 
 Or try this, to detect the carrier(s) associated with a tracking number:
+
 ```
 http://trackit-api.herokuapp.com/api/guess/1ZV5E9420444964064
 ```
 
-_*Note*: `trackit-api` Heroku app is not meant for production use, and there are no guarantees included here, regarding it's availability, or up-time. It is only meant as a preview for the `trackit` node module._
+_*Note*: `trackit-api` Heroku app is not meant for production use, and there are
+no guarantees included here, regarding it's availability, or up-time. It is only
+meant as a preview for the `trackit` node module._
 
 ### Carriers supported
+
 * UPS
 * FedEx
 * FedEx Smartpost
@@ -40,6 +62,7 @@ _*Note*: `trackit-api` Heroku app is not meant for production use, and there are
 ## Usage
 
 Add trackit to your `package.json` and then npm install it.
+
 ```
 npm install @heuristical/trackit
 ```
@@ -47,74 +70,93 @@ npm install @heuristical/trackit
 ### Using the API Adapter
 
 Use it to initialize the shipper clients with your account credentials.
-```coffeescript
-{
-  UpsClient,
-  FedexClient,
-  UspsClient,
-  DhlClient,
-  LasershipClient,
-  OnTracClient,
-  UpsMiClient,
-  DhlGmClient,
-  CanadaPostClient,
-  AmazonClient,
-  PrestigeClient
-} = require 'trackit'
 
-ups = new UpsClient
-  licenseNumber: '1C999A999B999999'
-  userId: 'trackit-user'
-  password: 'shhh-secret'
+```typescript
+import {
+	UpsClient,
+	FedexClient,
+	UspsClient,
+	DhlClient,
+	LasershipClient,
+	OnTracClient,
+	UpsMiClient,
+	DhlGmClient,
+	CanadaPostClient,
+	AmazonClient,
+	PrestigeClient
+} from 'trackit';
 
-fedex = new FedexClient
-  key: 'xyxyxyxyabababab'
-  password: 'asdfawasfdasdfasdf1'
-  account: '123456789'
-  meter: '99999999'
+const ups = new UpsClient({
+	licenseNumber: '1C999A999B999999',
+	userId: 'trackit-user',
+	password: 'shhh-secret'
+});
 
-usps = new UspsClient
-  userId: '590XABCR3210'
-  clientIp: '10.5.5.1'
+const fedex = new FedexClient({
+	key: 'xyxyxyxyabababab',
+	password: 'asdfawasfdasdfasdf1',
+	account: '123456789',
+	meter: '99999999'
+});
 
-lsClient = new LasershipClient()
+const usps = new UspsClient({
+	userId: "590XABCR3210",
+	clientIp: "10.5.5.1"
+});
 
-dhlClient = new DhlClient
-  userId: 'SHIPI_79999'
-  password: 'trackit'
+const lsClient = new LasershipClient();
 
-dhlgmClient = new DhlGmClient()
+const dhlClient = new DhlClient({
+	userId: "SHIPI_79999",
+	password: "trackit"
+});
 
-canadaPostClient: new CanadaPostClient
-  username: 'maple-leafs'
-  password: 'zamboni'
+const dhlgmClient = new DhlGmClient();
 
-onTrac = new OnTracClient()
+const canadaPostClient = new CanadaPostClient({
+	username: "maple-leafs",
+	password: "zamboni"
+});
 
-upsmi = new UpsMiClient()
+const onTrac = new OnTracClient();
 
-amazonClient = new AmazonClient()
+const upsmi = new UpsMiClient();
 
-prestige = new PrestigeClient()
+const amazonClient = new AmazonClient();
+
+const prestige = new PrestigeClient();
 ```
 
 Use an initialized client to request tracking data.
-```coffeescript
-ups.requestData {trackingNumber: '1Z1234567890123456'}, (err, result) ->
-  console.log "[ERROR] error retrieving tracking data #{err}" if err?
-  console.log "[DEBUG] new tracking data received #{JSON.stringify(result)}" if result?
+
+```typescript
+const {
+	err,
+	data
+} = await ups.requestData({ trackingNumber: '1Z1234567890123456' });
+
+if (err) console.error("[ERROR] error retrieving tracking data", err);
+if (data) console.log("[DEBUG] new tracking data received.", data);
 ```
 
-You can use the Amazon client to query status of an item by its order ID and shipment ID (packageIndex defaults to 1 - trackit does not yet support multiple shipments per order).
-```coffeescript
-orderID = '106-9151392-7203433'
-orderingShipmentId = 'DmZd0KS8k'
-amazonClient.requestData {orderID, orderingShipmentId}, (err, result) ->
-  console.log "[ERROR] error retrieving tracking data #{err}" if err?
-  console.log "[DEBUG] new tracking data received #{JSON.stringify(result)}" if result?
+You can use the Amazon client to query status of an item by its order ID and
+shipment ID (packageIndex defaults to 1 - trackit does not yet support multiple
+shipments per order).
+
+```typescript
+const orderID = '106-9151392-7203433';
+const orderingShipmentId = 'DmZd0KS8k';
+const {
+	err,
+	data
+} = await amazonClient.requestData({ orderID, orderingShipmentId });
+if (err) console.error("[ERROR] error retrieving tracking data", err);
+if (data) console.log("[DEBUG] new tracking data received.", data);
 ```
 
-Note that `orderId` and `shipmentId` can be found in the URL embedded in the *"Track your package"* yellow button.  Here's the format of that URL:
+Note that `orderId` and `shipmentId` can be found in the URL embedded in the *"
+Track your package"* yellow button. Here's the format of that URL:
+
 ```
 https://www.amazon.com/gp/css/shiptrack/view.html
 /ref=pe_385040_121528360_TE_SIMP_typ?ie=UTF8
@@ -124,6 +166,7 @@ https://www.amazon.com/gp/css/shiptrack/view.html
 ```
 
 Example response returned:
+
 ```
 {
     "status": 2,
@@ -156,166 +199,202 @@ Example response returned:
     }
 }
 ```
+
 #### A Note on `timestamp` and `datetime`
-There are two types of shipping carriers - one that provide a date and time in their shipping activities that represents the local time at the location indicated. And another that provide a timestamp, which includes a UTC offset. In the first case, since a timezone is not known, trackit just assumes UTC, and returns a `timestamp` attribute in the `activity` objects. In the second case, trackit returns a `timestamp` attribute which has a UTC offset embedded in it, and also a `datetime` attribute which represents the local time.
+
+There are two types of shipping carriers - one that provide a date and time in
+their shipping activities that represents the local time at the location
+indicated. And another that provide a timestamp, which includes a UTC offset. In
+the first case, since a timezone is not known, trackit just assumes UTC, and
+returns a `timestamp` attribute in the `activity` objects. In the second case,
+trackit returns a `timestamp` attribute which has a UTC offset embedded in it,
+and also a `datetime` attribute which represents the local time.
 
 #### Optional parameters for shipper clients
-Shipper clients that require account credentials can be provided options as their second argument. And those that don't require any credentials can be provided options as their first argument
+
+Shipper clients that require account credentials can be provided options as
+their second argument. And those that don't require any credentials can be
+provided options as their first argument
+
 ```
 upsClient = new UpsClient credentials, [options]
 upsmiClient = new UpsMiClient [options]
 ```
+
 Valid options:
-* `raw` - response includes the raw response received from the shipping carrier API.
-* `timeout` - how many milliseconds to wait for a shipping carrier API response before returning a timeout error. This option can be overridden by a `timeout` attribute in the object passed on to the `requestData()` call.
+
+* `raw` - response includes the raw response received from the shipping carrier
+  API.
+* `timeout` - how many milliseconds to wait for a shipping carrier API response
+  before returning a timeout error. This option can be overridden by a `timeout`
+  attribute in the object passed on to the `requestData()` call.
 
 ### Using the Carrier Guesser
-There's usually only one carrier that matches a tracking number (UPS is the only carrier that uses '1Z' prefix for its tracking numbers), but there are several cases, where there are multiple matches.  For example, FedEx uses a service called SmartPost, where it relies on USPS to deliver the package at the last mile.  In such cases, FedEx provides tracking through most of the package's journey, and then USPS either takes over, or provides duplicate tracking in the last leg.  The tracking number used is the same between the two carriers.  Similar situation with UPS Mail Innovations as well.  Therefore, the `guessCarrier()` function returns an array, and we leave it up to the user to decide manually or through other automated means which carrier is the real one or provides more accurate tracking.
-```coffeescript
-{guessCarrier} = require 'trackit'
-possibleCarriers = guessCarrier '1Z6V86420323794365'
-[ 'ups' ]
-possibleCarriers = guessCarrier '9274899992136003821767'
-[ 'fedex', 'usps' ]
-possibleCarriers = guessCarrier 'EC207920162US'
-[ 'usps' ]
+
+There's usually only one carrier that matches a tracking number (UPS is the only
+carrier that uses '1Z' prefix for its tracking numbers), but there are several
+cases, where there are multiple matches. For example, FedEx uses a service
+called SmartPost, where it relies on USPS to deliver the package at the last
+mile. In such cases, FedEx provides tracking through most of the package's
+journey, and then USPS either takes over, or provides duplicate tracking in the
+last leg. The tracking number used is the same between the two carriers. Similar
+situation with UPS Mail Innovations as well. Therefore, the `guessCarrier()`
+function returns an array, and we leave it up to the user to decide manually or
+through other automated means which carrier is the real one or provides more
+accurate tracking.
+
+```typescript
+import { guessCarrier } from 'trackit';
+
+let possibleCarriers = guessCarrier('1Z6V86420323794365');
+// ['ups']
+possibleCarriers = guessCarrier('9274899992136003821767');
+// ['fedex', 'usps']
+possibleCarriers = guessCarrier('EC207920162US');
+// ['usps']
 ```
 
 ## Building
+
 Clone this repo (or first fork it)
+
 ```
 git clone git@github.com:heuristicAL/trackit.git
 ```
+
 Install dependencies
+
 ```
 npm install
 ```
-Just use grunt.
+
+Build
+
 ```
-$ grunt
-
-. . .
-. . .
-
-  182 passing (347ms)
-
-
-Done, without errors.
+npm run build
 ```
 
 ## Adding new shipping carriers
-* Extend the common class `ShipperClient`
+
+* Extend the common
+  class `TrackitClient<TShipment, TRequestOptions extends ITrackitRequestOptions>`
 * Implement necessary methods
-  - `generateRequest(trk, reference)`
-  - `requestOptions({trk, reference})`
-  - `validateResponse(response, cb)`
+	- `generateRequest(trk, reference)`
+	- `requestOptions({trk, reference})`
+	- `validateResponse(response, cb)`
 
 ## Conversion To-Do
+
 - [x] Convert .coffee files.
 - [x] Migrate grunt to vanilla tsc.
 - [x] Migrate tests to use ts-node/register as a runner.
 - [x] Fix library files (`src/**/*.ts`).
-  - [x] Edit tsconfig to include  `src/**/*.ts` instead of `src/*.ts` once done
-  - [x] Syntax and typerrors
-    - [x] fedex.ts
-    - [x] shipper.ts
-    - [x] usps.ts
-    - [x] guessCarrier.ts
-    - [x] upsmi.ts
-    - [x] lasership.ts
-    - [x] dhl.ts
-    - [x] canada_post.ts
-    - [x] ontrac.ts
-    - [x] prestige.ts
-    - [x] a1.ts
-    - [x] dhlgm.ts
-    - [x] ups.ts
-    - [x] checkdigit.ts
-    - [x] main.ts
-    - [x] amazon.ts
-  - [x] Tests run and functioning
-    - [x] fedex.ts
-    - [x] shipper.ts <!-- Add Shipper tests? -->
-    - [x] usps.ts
-    - [x] guessCarrier.ts
-    - [x] upsmi.ts
-    - [x] lasership.ts
-    - [x] dhl.ts
-    - [x] canada_post.ts
-    - [x] ontrac.ts
-    - [x] prestige.ts
-    - [x] a1.ts
-    - [x] dhlgm.ts
-    - [x] ups.ts
-    - [x] index.ts
-    - [x] amazon.ts
-  - [x] Cleanup Bulk-Decaf comment suggestions
-    - [x] fedex.ts
-    - [x] shipper.ts
-    - [x] usps.ts
-    - [x] guessCarrier.ts
-    - [x] upsmi.ts
-    - [x] lasership.ts
-    - [x] dhl.ts
-    - [x] canada_post.ts
-    - [x] ontrac.ts
-    - [x] prestige.ts
-    - [x] a1.ts
-    - [x] dhlgm.ts
-    - [x] ups.ts
-    - [x] main.ts
-    - [x] amazon.ts
-- [x] Fix test files (`test/**/*.ts`). !!! NOTE: 5 or 6 tests were already broken in the original trackit repo. I did not bother fixing them as I am not fluent in coffeescript and I felt it was a waste of time since we're reqriting most of the code here.
-  - [x] Rename files from `test/**/*.ts` to `test/**/*.spec.ts` INCREMENTALLY
-  - [x] Syntax and typerrors
-    - [x] fedex.ts
-    - [x] shipper.ts <!-- Add Shipper tests? -->
-    - [x] usps.ts
-    - [x] guessCarrier.ts
-    - [x] upsmi.ts
-    - [x] lasership.ts
-    - [x] dhl.ts
-    - [x] canada_post.ts
-    - [x] ontrac.ts
-    - [x] prestige.ts
-    - [x] a1.ts
-    - [x] dhlgm.ts
-    - [X] ups.ts
-    - [x] amazon.ts
-  - [x] Tests run and functioning
-    - [x] fedex.ts
-    - [x] shipper.ts <!-- Add Shipper tests? -->
-    - [x] usps.ts
-    - [x] guessCarrier.ts
-    - [x] upsmi.ts
-    - [x] lasership.ts
-    - [x] dhl.ts
-    - [x] canada_post.ts
-    - [x] ontrac.ts
-    - [x] prestige.ts
-    - [x] a1.ts
-    - [x] dhlgm.ts
-    - [x] ups.ts
-    - [x] amazon.ts
-  - [x] Cleanup Bulk-Decaf comment suggestions
-    - [x] fedex.ts
-    - [x] shipper.ts  <!-- Add Shipper tests? -->
-    - [x] usps.ts
-    - [x] guessCarrier.ts
-    - [x] upsmi.ts
-    - [x] lasership.ts
-    - [x] dhl.ts
-    - [x] canada_post.ts
-    - [x] ontrac.ts
-    - [x] prestige.ts
-    - [x] a1.ts
-    - [x] dhlgm.ts
-    - [x] ups.ts
-    - [x] main.ts
-    - [x] amazon.ts
-- [ ] Update README
+	- [x] Edit tsconfig to include  `src/**/*.ts` instead of `src/*.ts` once
+	  done
+	- [x] Syntax and typerrors
+		- [x] fedex.ts
+		- [x] shipper.ts
+		- [x] usps.ts
+		- [x] guessCarrier.ts
+		- [x] upsmi.ts
+		- [x] lasership.ts
+		- [x] dhl.ts
+		- [x] canada_post.ts
+		- [x] ontrac.ts
+		- [x] prestige.ts
+		- [x] a1.ts
+		- [x] dhlgm.ts
+		- [x] ups.ts
+		- [x] checkdigit.ts
+		- [x] main.ts
+		- [x] amazon.ts
+	- [x] Tests run and functioning
+		- [x] fedex.ts
+		- [x] shipper.ts <!-- Add Shipper tests? -->
+		- [x] usps.ts
+		- [x] guessCarrier.ts
+		- [x] upsmi.ts
+		- [x] lasership.ts
+		- [x] dhl.ts
+		- [x] canada_post.ts
+		- [x] ontrac.ts
+		- [x] prestige.ts
+		- [x] a1.ts
+		- [x] dhlgm.ts
+		- [x] ups.ts
+		- [x] index.ts
+		- [x] amazon.ts
+	- [x] Cleanup Bulk-Decaf comment suggestions
+		- [x] fedex.ts
+		- [x] shipper.ts
+		- [x] usps.ts
+		- [x] guessCarrier.ts
+		- [x] upsmi.ts
+		- [x] lasership.ts
+		- [x] dhl.ts
+		- [x] canada_post.ts
+		- [x] ontrac.ts
+		- [x] prestige.ts
+		- [x] a1.ts
+		- [x] dhlgm.ts
+		- [x] ups.ts
+		- [x] main.ts
+		- [x] amazon.ts
+- [x] Fix test files (`test/**/*.ts`). !!! NOTE: 5 or 6 tests were already
+  broken in the original trackit repo. I did not bother fixing them as I am not
+  fluent in coffeescript and I felt it was a waste of time since we're reqriting
+  most of the code here.
+	- [x] Rename files from `test/**/*.ts` to `test/**/*.spec.ts` INCREMENTALLY
+	- [x] Syntax and typerrors
+		- [x] fedex.ts
+		- [x] shipper.ts <!-- Add Shipper tests? -->
+		- [x] usps.ts
+		- [x] guessCarrier.ts
+		- [x] upsmi.ts
+		- [x] lasership.ts
+		- [x] dhl.ts
+		- [x] canada_post.ts
+		- [x] ontrac.ts
+		- [x] prestige.ts
+		- [x] a1.ts
+		- [x] dhlgm.ts
+		- [X] ups.ts
+		- [x] amazon.ts
+	- [x] Tests run and functioning
+		- [x] fedex.ts
+		- [x] shipper.ts <!-- Add Shipper tests? -->
+		- [x] usps.ts
+		- [x] guessCarrier.ts
+		- [x] upsmi.ts
+		- [x] lasership.ts
+		- [x] dhl.ts
+		- [x] canada_post.ts
+		- [x] ontrac.ts
+		- [x] prestige.ts
+		- [x] a1.ts
+		- [x] dhlgm.ts
+		- [x] ups.ts
+		- [x] amazon.ts
+	- [x] Cleanup Bulk-Decaf comment suggestions
+		- [x] fedex.ts
+		- [x] shipper.ts  <!-- Add Shipper tests? -->
+		- [x] usps.ts
+		- [x] guessCarrier.ts
+		- [x] upsmi.ts
+		- [x] lasership.ts
+		- [x] dhl.ts
+		- [x] canada_post.ts
+		- [x] ontrac.ts
+		- [x] prestige.ts
+		- [x] a1.ts
+		- [x] dhlgm.ts
+		- [x] ups.ts
+		- [x] main.ts
+		- [x] amazon.ts
+- [x] Update README
 - [ ] Update License?
-- [ ] Update StatusMaps for carriers to match the actual shipment status better (ex: `Delayed` instead of still `In_Transit` in certain cases).
+- [ ] Update StatusMaps for carriers to match the actual shipment status
+  better (ex: `Delayed` instead of still `In_Transit` in certain cases).
 - [x] Figure out a new name?
 - [x] Clear up the `any`s :anguished:
 - [x] Clean up the `__guard__` methods that were generated by decaffeinate.
