@@ -1,9 +1,3 @@
-## Disclaimer!
-
-> I am in the process of converting the original coffeescript and callback based project to use Typescript and promises instead. I'll try to keep the below [To-Do](https://github.com/heuristicAL/trackit#conversion-to-do) as up-to-date as possible so feel free to hack away and open up a PR if you wish! I'll be more than happy for the help!
-
-## What is this?
-
 # Shipping APIs Adapter
 
 `trackit` is a node module that allows you to retrieve data from shipping
@@ -18,30 +12,6 @@ Really, why do users have to know that a tracking number was provided by a
 particular carrier. That step is just totally unnecessary, given that we can
 guess the carrier from the tracking number in 90% of the cases. `trackit`
 provides a convenience function for this.
-
-### Try it
-
-There's a [Heroku](http://www.heroku.com) hobby app that allows you to
-see `trackit` in action. For example, try this:
-
-```
-http://trackit-api.herokuapp.com/api/carriers/ups/1ZV5E9420444964064
-```
-
-And replace `ups` with
-a [canonical name](https://github.com/sailrish/trackit/blob/master/src/guessCarrier.coffee#L91-L121)
-for any of the supported carriers, and provide a valid tracking number for that
-carrier.
-
-Or try this, to detect the carrier(s) associated with a tracking number:
-
-```
-http://trackit-api.herokuapp.com/api/guess/1ZV5E9420444964064
-```
-
-_*Note*: `trackit-api` Heroku app is not meant for production use, and there are
-no guarantees included here, regarding it's availability, or up-time. It is only
-meant as a preview for the `trackit` node module._
 
 ### Carriers supported
 
@@ -61,15 +31,15 @@ meant as a preview for the `trackit` node module._
 
 ## Usage
 
-Add trackit to your `package.json` and then npm install it.
+Add trackit to your `package.json` and install it.
 
 ```
 npm install @heuristical/trackit
 ```
 
-### Using the API Adapter
+### Using the trackit Clients
 
-Use it to initialize the shipper clients with your account credentials.
+Initialize the shipper clients with your account credentials.
 
 ```typescript
 import {
@@ -210,24 +180,41 @@ returns a `timestamp` attribute in the `activity` objects. In the second case,
 trackit returns a `timestamp` attribute which has a UTC offset embedded in it,
 and also a `datetime` attribute which represents the local time.
 
-#### Optional parameters for shipper clients
+#### Optional parameters for trackit clients
 
-Shipper clients that require account credentials can be provided options as
-their second argument. And those that don't require any credentials can be
-provided options as their first argument
+Trackit clients parameters must be an options object that extends the
+`ITrackitClientOptions` interface. This means that you can optionally set some
+default request parameters that will then be automatically included for every
+request that that client performs. These can also be passed manually when
+calling the
+`requestData()` method.
 
-```
-upsClient = new UpsClient credentials, [options]
-upsmiClient = new UpsMiClient [options]
+```typescript
+// Set for all requests performed by upsClient
+const upsClient = new UpsClient({
+	...otherClientOptions,
+	raw: true,
+	timeout: 1000
+});
+
+// Alternatively, you can specify these parameters on a per-request basis.
+const { err, data } = await upsClient.requestData({
+	...otherClientOptions,
+	raw: true,
+	timeout: 1000
+});
 ```
 
 Valid options:
 
 * `raw` - response includes the raw response received from the shipping carrier
-  API.
+  API.<br/>
+  Default Value: `false`
+
 * `timeout` - how many milliseconds to wait for a shipping carrier API response
   before returning a timeout error. This option can be overridden by a `timeout`
-  attribute in the object passed on to the `requestData()` call.
+  attribute in the object passed on to the `requestData()` call.<br/>
+  Default Value: `2000`
 
 ### Using the Carrier Guesser
 
@@ -278,124 +265,22 @@ npm run build
 
 * Extend the common
   class `TrackitClient<TShipment, TRequestOptions extends ITrackitRequestOptions>`
-* Implement necessary methods
-	- `generateRequest(trk, reference)`
-	- `requestOptions({trk, reference})`
-	- `validateResponse(response, cb)`
+* Implement necessary methods:
+	- `requestOptions(options: TRequestOptions extends ITrackitRequestOptions)`
+	- `validateResponse(response: string)`
 
-## Conversion To-Do
+## Credits
 
-- [x] Convert .coffee files.
-- [x] Migrate grunt to vanilla tsc.
-- [x] Migrate tests to use ts-node/register as a runner.
-- [x] Fix library files (`src/**/*.ts`).
-	- [x] Edit tsconfig to include  `src/**/*.ts` instead of `src/*.ts` once
-	  done
-	- [x] Syntax and typerrors
-		- [x] fedex.ts
-		- [x] shipper.ts
-		- [x] usps.ts
-		- [x] guessCarrier.ts
-		- [x] upsmi.ts
-		- [x] lasership.ts
-		- [x] dhl.ts
-		- [x] canada_post.ts
-		- [x] ontrac.ts
-		- [x] prestige.ts
-		- [x] a1.ts
-		- [x] dhlgm.ts
-		- [x] ups.ts
-		- [x] checkdigit.ts
-		- [x] main.ts
-		- [x] amazon.ts
-	- [x] Tests run and functioning
-		- [x] fedex.ts
-		- [x] shipper.ts <!-- Add Shipper tests? -->
-		- [x] usps.ts
-		- [x] guessCarrier.ts
-		- [x] upsmi.ts
-		- [x] lasership.ts
-		- [x] dhl.ts
-		- [x] canada_post.ts
-		- [x] ontrac.ts
-		- [x] prestige.ts
-		- [x] a1.ts
-		- [x] dhlgm.ts
-		- [x] ups.ts
-		- [x] index.ts
-		- [x] amazon.ts
-	- [x] Cleanup Bulk-Decaf comment suggestions
-		- [x] fedex.ts
-		- [x] shipper.ts
-		- [x] usps.ts
-		- [x] guessCarrier.ts
-		- [x] upsmi.ts
-		- [x] lasership.ts
-		- [x] dhl.ts
-		- [x] canada_post.ts
-		- [x] ontrac.ts
-		- [x] prestige.ts
-		- [x] a1.ts
-		- [x] dhlgm.ts
-		- [x] ups.ts
-		- [x] main.ts
-		- [x] amazon.ts
-- [x] Fix test files (`test/**/*.ts`). !!! NOTE: 5 or 6 tests were already
-  broken in the original trackit repo. I did not bother fixing them as I am not
-  fluent in coffeescript and I felt it was a waste of time since we're reqriting
-  most of the code here.
-	- [x] Rename files from `test/**/*.ts` to `test/**/*.spec.ts` INCREMENTALLY
-	- [x] Syntax and typerrors
-		- [x] fedex.ts
-		- [x] shipper.ts <!-- Add Shipper tests? -->
-		- [x] usps.ts
-		- [x] guessCarrier.ts
-		- [x] upsmi.ts
-		- [x] lasership.ts
-		- [x] dhl.ts
-		- [x] canada_post.ts
-		- [x] ontrac.ts
-		- [x] prestige.ts
-		- [x] a1.ts
-		- [x] dhlgm.ts
-		- [X] ups.ts
-		- [x] amazon.ts
-	- [x] Tests run and functioning
-		- [x] fedex.ts
-		- [x] shipper.ts <!-- Add Shipper tests? -->
-		- [x] usps.ts
-		- [x] guessCarrier.ts
-		- [x] upsmi.ts
-		- [x] lasership.ts
-		- [x] dhl.ts
-		- [x] canada_post.ts
-		- [x] ontrac.ts
-		- [x] prestige.ts
-		- [x] a1.ts
-		- [x] dhlgm.ts
-		- [x] ups.ts
-		- [x] amazon.ts
-	- [x] Cleanup Bulk-Decaf comment suggestions
-		- [x] fedex.ts
-		- [x] shipper.ts  <!-- Add Shipper tests? -->
-		- [x] usps.ts
-		- [x] guessCarrier.ts
-		- [x] upsmi.ts
-		- [x] lasership.ts
-		- [x] dhl.ts
-		- [x] canada_post.ts
-		- [x] ontrac.ts
-		- [x] prestige.ts
-		- [x] a1.ts
-		- [x] dhlgm.ts
-		- [x] ups.ts
-		- [x] main.ts
-		- [x] amazon.ts
-- [x] Update README
-- [x] Update License?
-- [ ] Update StatusMaps for carriers to match the actual shipment status
-  better (ex: `Delayed` instead of still `In_Transit` in certain cases).
-- [x] Figure out a new name?
-- [x] Clear up the `any`s :anguished:
-- [x] Clean up the `__guard__` methods that were generated by decaffeinate.
-- [x] Remove dependencies on `underscore`.
+> trackit was originally forked from [shipit](https://github.com/sailrish/shipit)
+> and then the code went through some heavy changes:
+> - The code was converted from [Coffeescript](https://coffeescript.org/) to [Typescript](https://www.typescriptlang.org/)
+> - The callback-based code was replaced by promise-based code.
+> - [moment](https://momentjs.com/) was replaced by [date-fns](https://date-fns.org/)
+> - Finally, the original [Chai](https://www.chaijs.com/) and [Mocha](https://mochajs.org/) tests were replaced by [Jest](https://jestjs.io/).
+>
+> Due to the extensive changes that these changes introduced, I decided to
+> unlink this from the original forked repo as, realistically, they will never be in sync.
+
+1. [Rishi Arora](https://github.com/sailrish) for creating the original project
+   that trackit was forked from [shipit](https://github.com/sailrish/shipit)
+

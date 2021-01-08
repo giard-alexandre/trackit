@@ -26,11 +26,13 @@ export interface ITrackitRequestOptions {
 export interface ITrackitClientOptions {
   /**
    * Response includes the raw response received from the shipping carrier API.
+   * @default false
    */
   raw?: boolean;
   /**
    * Number of milliseconds before requests to carriers timeout.
    * This option can be overridden by a `timeout` attribute in the object passed on to the `requestData()` call.
+   * @default 2000
    */
   timeout?: number;
 }
