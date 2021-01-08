@@ -392,7 +392,7 @@ npm run build
 		- [x] main.ts
 		- [x] amazon.ts
 - [x] Update README
-- [ ] Update License?
+- [x] Update License?
 - [ ] Update StatusMaps for carriers to match the actual shipment status
   better (ex: `Delayed` instead of still `In_Transit` in certain cases).
 - [x] Figure out a new name?
