@@ -22,7 +22,7 @@ module.exports = {
         "@typescript-eslint"
     ],
     rules: {
-        // Fix these
+        // TODO: Fix these
         "no-void": "warn",
         "prefer-const" : "warn",
         // End fixes
@@ -53,7 +53,8 @@ module.exports = {
 					"match": true
 				}
 			}
-		]
+		],
+		"@typescript-eslint/no-unused-vars": ["warn", {"args": "after-used", "argsIgnorePattern": "_"}]
     },
     "settings": {}
 };

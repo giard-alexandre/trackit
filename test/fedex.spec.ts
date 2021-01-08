@@ -1,30 +1,15 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-expressions,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
+/* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access */
 import assert from "assert";
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import * as fs from "fs";
 import { Parser } from "xml2js";
-import { FedexClient } from "../src/fedex";
-import { STATUS_TYPES } from "../src/shipper";
+import { FedexClient } from "../src/carriers/fedex";
+import { STATUS_TYPES } from "../src/trackitClient";
+
+const handleError = (e: unknown) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
 
 describe("fedex client", () => {
   let _fedexClient: FedexClient = null;
@@ -46,11 +31,9 @@ describe("fedex client", () => {
 
     beforeAll(async () => {
       const promise = new Promise((resolve, reject) => {
-        const trackXml = _fedexClient.generateRequest(
-          "1Z5678",
-          "eloquent shipit"
-        );
-        return _xmlParser.parseString(trackXml, function (err, data) {
+        const trackXml = _fedexClient.generateRequest("1Z5678", "eloquent shipit");
+        return _xmlParser.parseString(trackXml, (err, data) => {
+          handleError(err);
           _trackRequest = data?.["ns:TrackRequest"];
           assert(_trackRequest != null);
           return resolve();
@@ -62,20 +45,13 @@ describe("fedex client", () => {
     it("contains the correct xml namespace and scheme location", () => {
       expect(_trackRequest).toHaveProperty("$");
       expect(_trackRequest.$["xmlns:ns"]).toBe("http://fedex.com/ws/track/v5");
-      expect(_trackRequest.$["xmlns:xsi"]).toBe(
-        "http://www.w3.org/2001/XMLSchema-instance"
-      );
-      expect(_trackRequest.$["xsi:schemaLocation"]).toBe(
-        "http://fedex.com/ws/track/v4 TrackService_v4.xsd"
-      );
+      expect(_trackRequest.$["xmlns:xsi"]).toBe("http://www.w3.org/2001/XMLSchema-instance");
+      expect(_trackRequest.$["xsi:schemaLocation"]).toBe("http://fedex.com/ws/track/v4 TrackService_v4.xsd");
     });
 
     it("contains correct api key and password", () => {
       expect(_trackRequest).toHaveProperty("ns:WebAuthenticationDetail");
-      const credentials =
-        _trackRequest?.["ns:WebAuthenticationDetail"]?.[0]?.[
-          "ns:UserCredential"
-        ]?.[0];
+      const credentials = _trackRequest?.["ns:WebAuthenticationDetail"]?.[0]?.["ns:UserCredential"]?.[0];
       if (credentials["ns:Key"] != null) {
         expect(credentials["ns:Key"][0]).toBe("fedex-api-key");
       }
@@ -88,17 +64,12 @@ describe("fedex client", () => {
       if (clientDetail["ns:AccountNumber"] != null) {
         expect(clientDetail["ns:AccountNumber"][0]).toBe("fedex-user");
       }
-      expect(clientDetail?.["ns:MeterNumber"]?.[0]).toEqual(
-        "what-can-brown-do-for-you"
-      );
+      expect(clientDetail?.["ns:MeterNumber"]?.[0]).toEqual("what-can-brown-do-for-you");
     });
 
     it("contains customer reference number", () => {
       expect(_trackRequest).toHaveProperty("ns:TransactionDetail");
-      const transaction =
-        _trackRequest?.["ns:TransactionDetail"]?.[0]?.[
-          "ns:CustomerTransactionId"
-        ]?.[0];
+      const transaction = _trackRequest?.["ns:TransactionDetail"]?.[0]?.["ns:CustomerTransactionId"]?.[0];
       expect(transaction).toBe("eloquent shipit");
     });
 
@@ -122,13 +93,9 @@ describe("fedex client", () => {
     it("contains tracking number", () => {
       expect(_trackRequest).toHaveProperty("ns:PackageIdentifier");
       if (_trackRequest["ns:PackageIdentifier"] != null) {
-        expect(_trackRequest["ns:PackageIdentifier"][0]["ns:Value"][0]).toBe(
-          "1Z5678"
-        );
+        expect(_trackRequest["ns:PackageIdentifier"][0]["ns:Value"][0]).toBe("1Z5678");
       }
-      expect(
-        _trackRequest?.["ns:PackageIdentifier"]?.[0]?.["ns:Type"]?.[0]
-      ).toEqual("TRACKING_NUMBER_OR_DOORTAG");
+      expect(_trackRequest?.["ns:PackageIdentifier"]?.[0]?.["ns:Type"]?.[0]).toEqual("TRACKING_NUMBER_OR_DOORTAG");
     });
 
     it("contains appropriate flags", () => {
@@ -151,46 +118,38 @@ describe("fedex client", () => {
 
     it("returns an error if there's no track reply", (done) => {
       const badResponse = "<RandomXml>Random</RandomXml>";
-      return _fedexClient
-        .validateResponse(_xmlHeader + badResponse)
-        .then(({ err }) => {
-          expect(err).toBeDefined();
-          return done();
-        });
+      return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err }) => {
+        expect(err).toBeDefined();
+        done();
+      });
     });
 
     it("returns an error if track reply doesn't contain notifications", (done) => {
       const badResponse =
         '<TrackReply xmlns="http://fedex.com/ws/track/v5" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><HighestSeverity>SUCCESS</HighestSeverity></TrackReply>';
-      return _fedexClient
-        .validateResponse(_xmlHeader + badResponse)
-        .then(({ err }) => {
-          expect(err).toBeDefined();
-          return done();
-        });
+      return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err }) => {
+        expect(err).toBeDefined();
+        done();
+      });
     });
 
     it("returns an error when there are no success notifications", (done) => {
       const badResponse =
         '<TrackReply xmlns="http://fedex.com/ws/track/v5" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><HighestSeverity>SUCCESS</HighestSeverity><Notifications><Severity>SUCCESS</Severity><Source>trck</Source><Code>1</Code><Message>Request was successfully processed.</Message><LocalizedMessage>Request was successfully processed.</LocalizedMessage></Notifications></TrackReply>';
-      return _fedexClient
-        .validateResponse(_xmlHeader + badResponse)
-        .then(({ err }) => {
-          expect(err).toBeDefined();
-          return done();
-        });
+      return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err }) => {
+        expect(err).toBeDefined();
+        done();
+      });
     });
 
     it("returns track details when notifications indicate success", (done) => {
       const badResponse =
         '<TrackReply xmlns="http://fedex.com/ws/track/v5" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><HighestSeverity>SUCCESS</HighestSeverity><Notifications><Severity>SUCCESS</Severity><Source>trck</Source><Code>0</Code><Message>Request was successfully processed.</Message><LocalizedMessage>Request was successfully processed.</LocalizedMessage></Notifications><TrackDetails>details</TrackDetails></TrackReply>';
-      return _fedexClient
-        .validateResponse(_xmlHeader + badResponse)
-        .then(({ err, shipment: resp }) => {
-          expect(err).toBeFalsy();
-          expect(resp).toBe("details");
-          return done();
-        });
+      return _fedexClient.validateResponse(_xmlHeader + badResponse).then(({ err, shipment: resp }) => {
+        expect(err).toBeFalsy();
+        expect(resp).toBe("details");
+        done();
+      });
     });
   });
 
@@ -200,33 +159,26 @@ describe("fedex client", () => {
     describe("delivered package", () => {
       beforeAll(async () => {
         const promise = new Promise((resolve, reject) => {
-          fs.readFile(
-            "test/stub_data/fedex_delivered.xml",
-            "utf8",
-            (err, xmlDoc) =>
-              _fedexClient
-                .presentResponse(xmlDoc, "trk")
-                .then(({ err, presentedResponse: resp }) => {
-                  expect(err).toBeFalsy();
-                  _package = resp;
-                  resolve();
-                })
-          );
+          fs.readFile("test/stub_data/fedex_delivered.xml", "utf8", (err, xmlDoc) => {
+            handleError(err);
+            _fedexClient.presentResponse(xmlDoc).then(({ err, data: resp }) => {
+              expect(err).toBeFalsy();
+              _package = resp;
+              resolve();
+            }, handleError);
+          });
         });
         return promise;
       });
 
-      it("has a status of delivered", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
+      it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
       it("has a service type of fedex priority overnight", () =>
         expect(_package.service).toBe("FedEx Priority Overnight"));
 
-      it("has a weight of 0.2 LB", () =>
-        expect(_package.weight).toBe("0.2 LB"));
+      it("has a weight of 0.2 LB", () => expect(_package.weight).toBe("0.2 LB"));
 
-      it("has a destination of MD", () =>
-        expect(_package.destination).toBe("MD"));
+      it("has a destination of MD", () => expect(_package.destination).toBe("MD"));
 
       it("has 7 activities", () => expect(_package.activities).toHaveLength(7));
 
@@ -249,41 +201,32 @@ describe("fedex client", () => {
     describe("in transit package with an activity with missing location", () => {
       beforeAll(async () => {
         const promise = new Promise((resolve, reject) => {
-          fs.readFile(
-            "test/stub_data/fedex_missing_location.xml",
-            "utf8",
-            (err, xmlDoc) =>
-              _fedexClient
-                .presentResponse(xmlDoc, "trk")
-                .then(({ err, presentedResponse: resp }) => {
-                  expect(err).toBeFalsy();
-                  _package = resp;
-                  return resolve();
-                })
-          );
+          fs.readFile("test/stub_data/fedex_missing_location.xml", "utf8", (err, xmlDoc) => {
+            handleError(err);
+            _fedexClient.presentResponse(xmlDoc).then(({ err, data: resp }) => {
+              expect(err).toBeFalsy();
+              _package = resp;
+              return resolve();
+            }, handleError);
+          });
         });
         return promise;
       });
 
-      it("has a status of in-transit", () =>
-        expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
+      it("has a status of in-transit", () => expect(_package.status).toBe(STATUS_TYPES.EN_ROUTE));
 
-      it("has a service type of FedEx SmartPost", () =>
-        expect(_package.service).toBe("FedEx SmartPost"));
+      it("has a service type of FedEx SmartPost", () => expect(_package.service).toBe("FedEx SmartPost"));
 
-      it("has a weight of 1.2 LB", () =>
-        expect(_package.weight).toBe("1.2 LB"));
+      it("has a weight of 1.2 LB", () => expect(_package.weight).toBe("1.2 LB"));
 
-      it("has a destination of Greenacres, WA", () =>
-        expect(_package.destination).toBe("Greenacres, WA"));
+      it("has a destination of Greenacres, WA", () => expect(_package.destination).toBe("Greenacres, WA"));
 
       it("has 3 activities", () => expect(_package.activities).toHaveLength(3));
 
       it("has first activity with location Troutdale, OR 97060", () =>
         expect(_package.activities[0].location).toBe("Troutdale, OR 97060"));
 
-      it("has second activity with no location", () =>
-        expect(_package.activities[1].location).toBeFalsy());
+      it("has second activity with no location", () => expect(_package.activities[1].location).toBeFalsy());
     });
   });
 });

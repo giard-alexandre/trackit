@@ -1,30 +1,15 @@
-/* eslint-disable
-    handle-callback-err,
-    no-return-assign,
-    no-undef,
-    no-unused-vars,
-*/
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import fs from "fs";
-import { DhlClient } from "../src/dhl";
-import { STATUS_TYPES } from "../src/shipper";
+import { DhlClient, IDhlRequestOptions } from "../src/carriers/dhl";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
+
+const handleError = (e: unknown) => {
+  if (e) {
+    throw new Error("This should never have been reached");
+  }
+};
 
 describe("dhl client", () => {
-  let _dhlClient = null;
+  let _dhlClient: DhlClient = null;
 
   beforeAll(
     () =>
@@ -54,29 +39,25 @@ describe("dhl client", () => {
   });
 
   describe("integration tests", () => {
-    let _package = null;
+    let _package: ITrackitResponseData<IDhlRequestOptions> = null;
 
     describe("delivered package", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/dhl_delivered.xml", "utf8", (err, doc) =>
-          _dhlClient
-            .presentResponse(doc, "trk")
-            .then(({ err: respErr, presentedResponse: resp }) => {
-              expect(respErr).toBeFalsy();
-              _package = resp;
-              return done();
-            })
-        )
+        fs.readFile("test/stub_data/dhl_delivered.xml", "utf8", (err, doc) => {
+          handleError(err);
+          _dhlClient.presentResponse(doc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            done();
+          }, handleError);
+        })
       );
 
-      it("has a status of delivered", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
+      it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
-      it("has a destination of Woodside, NY, USA", () =>
-        expect(_package.destination).toBe("Woodside, NY, USA"));
+      it("has a destination of Woodside, NY, USA", () => expect(_package.destination).toBe("Woodside, NY, USA"));
 
-      it("has a weight of 2.42 LB", () =>
-        expect(_package.weight).toBe("2.42 LB"));
+      it("has a weight of 2.42 LB", () => expect(_package.weight).toBe("2.42 LB"));
 
       it("has 14 activities with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(14);
@@ -93,25 +74,22 @@ describe("dhl client", () => {
 
     describe("delayed package", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/dhl_delayed.xml", "utf8", (err, doc) =>
-          _dhlClient
-            .presentResponse(doc, "trk")
-            .then(({ err: respErr, presentedResponse: resp }) => {
-              expect(respErr).toBeFalsy();
-              _package = resp;
-              return done();
-            })
-        )
+        fs.readFile("test/stub_data/dhl_delayed.xml", "utf8", (err, doc) => {
+          handleError(err);
+          _dhlClient.presentResponse(doc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            done();
+          }, handleError);
+        })
       );
 
-      it("has a status of delayed", () =>
-        expect(_package.status).toBe(STATUS_TYPES.DELAYED));
+      it("has a status of delayed", () => expect(_package.status).toBe(STATUS_TYPES.DELAYED));
 
       it("has a destination of Auckland, New Zealand", () =>
         expect(_package.destination).toBe("Auckland, New Zealand"));
 
-      it("has a weight of 14.66 LB", () =>
-        expect(_package.weight).toBe("14.66 LB"));
+      it("has a weight of 14.66 LB", () => expect(_package.weight).toBe("14.66 LB"));
 
       it("has 24 activities with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(24);
@@ -128,19 +106,17 @@ describe("dhl client", () => {
 
     describe("package with estimated delivery", () => {
       beforeAll((done) =>
-        fs.readFile("test/stub_data/dhl_eta.xml", "utf8", (err, doc) =>
-          _dhlClient
-            .presentResponse(doc, "trk")
-            .then(({ err: respErr, presentedResponse: resp }) => {
-              expect(respErr).toBeFalsy();
-              _package = resp;
-              return done();
-            })
-        )
+        fs.readFile("test/stub_data/dhl_eta.xml", "utf8", (err, doc) => {
+          handleError(err);
+          _dhlClient.presentResponse(doc, { trackingNumber: "trk" }).then(({ err: respErr, data: resp }) => {
+            expect(respErr).toBeFalsy();
+            _package = resp;
+            done();
+          }, handleError);
+        })
       );
 
-      it("has an estimated delivery date", () =>
-        expect(_package.eta).toEqual(new Date("2019-02-05T07:59:00.000Z")));
+      it("has an estimated delivery date", () => expect(_package.eta).toEqual(new Date("2019-02-05T07:59:00.000Z")));
     });
   });
 });

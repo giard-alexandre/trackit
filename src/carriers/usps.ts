@@ -1,44 +1,58 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars,
-    no-useless-escape,
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+import { AxiosRequestConfig } from "axios";
 import { Builder, Parser } from "xml2js";
 import {
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
+  IActivitiesAndStatus,
+  IActivity,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
-} from "./shipper";
+  TrackitClient,
+} from "../trackitClient";
 
-interface IUspsClientOptions extends IShipperClientOptions {
+interface IUspsClientOptions extends ITrackitClientOptions {
   userId: string;
 }
 
-class UspsClient extends ShipperClient {
+interface IUspsActivity {
+  EventCity: string[] | undefined;
+  EventState: string[] | undefined;
+  EventZIPCode: string[] | undefined;
+  EventCountry: string[] | undefined;
+  EventDate: string[] | undefined;
+  EventTime: string[] | undefined;
+  /**
+   * The Event details
+   */
+  Event: string[] | undefined;
+}
+
+interface IUspsShipment {
+  PredictedDeliveryDate: string[] | undefined;
+  ExpectedDeliveryDate: string[] | undefined;
+  Class: string[] | undefined;
+  DestinationCity: string[] | undefined;
+  DestinationState: string[] | undefined;
+  DestinationZip: string[] | undefined;
+  StatusCategory: string[] | undefined;
+  Status: string[] | undefined;
+  TrackSummary: IUspsActivity[];
+  TrackDetail: IUspsActivity[];
+}
+
+interface IUspsTrackResult {
+  TrackResponse: {
+    TrackInfo: IUspsShipment[];
+  };
+}
+
+export interface IUspsRequestOptions extends ITrackitRequestOptions {
+  trackingNumber: string;
+  clientIp?: string;
+  test?: boolean;
+}
+
+class UspsClient extends TrackitClient<IUspsShipment, IUspsRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["Accept", STATUS_TYPES.EN_ROUTE],
     ["Processed", STATUS_TYPES.EN_ROUTE],
@@ -76,13 +90,11 @@ class UspsClient extends ShipperClient {
 
   constructor(options: IUspsClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
     this.builder = new Builder({ renderOpts: { pretty: false } });
   }
 
-  generateRequest(trk, clientIp) {
+  generateRequest(trk: string, clientIp: string): string {
     if (clientIp == null) {
       clientIp = "127.0.0.1";
     }
@@ -99,15 +111,15 @@ class UspsClient extends ShipperClient {
     });
   }
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IUspsShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
-        this.parser.parseString(response, (xmlErr, trackResult) => {
+      const trackResult = await new Promise<IUspsTrackResult>((resolve, reject) => {
+        this.parser.parseString(response, (xmlErr, trkResult) => {
           if (xmlErr) {
             reject(xmlErr);
           } else {
-            resolve(trackResult);
+            resolve(trkResult);
           }
         });
       });
@@ -122,45 +134,39 @@ class UspsClient extends ShipperClient {
       }
       return { shipment: trackInfo };
     } catch (e) {
-      return { err: e };
+      return { err: e as Error };
     }
   }
 
-  getEta(shipment) {
+  getEta(shipment: IUspsShipment): Date {
     const rawEta =
-      (shipment.PredictedDeliveryDate != null
-        ? shipment.PredictedDeliveryDate[0]
-        : undefined) ||
-      (shipment.ExpectedDeliveryDate != null
-        ? shipment.ExpectedDeliveryDate[0]
-        : undefined);
+      (shipment.PredictedDeliveryDate != null ? shipment.PredictedDeliveryDate[0] : undefined) ||
+      (shipment.ExpectedDeliveryDate != null ? shipment.ExpectedDeliveryDate[0] : undefined);
     if (rawEta != null) {
       return new Date(`${rawEta} 00:00:00Z`);
     }
   }
 
-  getService(shipment) {
+  getService(shipment: IUspsShipment): string {
     const service = shipment.Class != null ? shipment.Class[0] : undefined;
     if (service != null) {
-      return service.replace(/\<SUP\>.*\<\/SUP\>/, "");
+      return service.replace(/<SUP>.*<\/SUP>/, "");
     }
   }
 
-  getWeight(shipment) {
+  getWeight(_: IUspsShipment): undefined {
     return undefined;
   }
 
-  presentTimestamp(dateString, timeString) {
+  presentTimestamp(dateString: string, timeString: string): Date {
     if (dateString == null) {
       return;
     }
-    timeString = (timeString != null ? timeString.length : undefined)
-      ? timeString
-      : "12:00 am";
+    timeString = (timeString != null ? timeString.length : undefined) ? timeString : "12:00 am";
     return new Date(`${dateString} ${timeString} +0000`);
   }
 
-  findStatusFromMap(statusText) {
+  findStatusFromMap(statusText: string): STATUS_TYPES {
     let status = STATUS_TYPES.UNKNOWN;
     if (statusText && statusText.length > 0) {
       for (const [key, value] of this.STATUS_MAP) {
@@ -173,21 +179,14 @@ class UspsClient extends ShipperClient {
     return status;
   }
 
-  presentStatus(details: string) {
+  presentStatus(details: string): STATUS_TYPES {
     return this.findStatusFromMap(details);
   }
 
-  getDestination(shipment) {
-    const city =
-      shipment.DestinationCity != null
-        ? shipment.DestinationCity[0]
-        : undefined;
-    const stateCode =
-      shipment.DestinationState != null
-        ? shipment.DestinationState[0]
-        : undefined;
-    const postalCode =
-      shipment.DestinationZip != null ? shipment.DestinationZip[0] : undefined;
+  getDestination(shipment: IUspsShipment): string {
+    const city = shipment.DestinationCity != null ? shipment.DestinationCity[0] : undefined;
+    const stateCode = shipment.DestinationState != null ? shipment.DestinationState[0] : undefined;
+    const postalCode = shipment.DestinationZip != null ? shipment.DestinationZip[0] : undefined;
     return this.presentLocation({
       city,
       stateCode,
@@ -196,7 +195,7 @@ class UspsClient extends ShipperClient {
     });
   }
 
-  getStatus(shipment) {
+  getStatus(shipment: IUspsShipment): STATUS_TYPES {
     const statusCategory = shipment?.StatusCategory?.[0];
     switch (statusCategory) {
       case "Pre-Shipment":
@@ -208,28 +207,21 @@ class UspsClient extends ShipperClient {
     }
   }
 
-  presentActivity(rawActivity) {
-    let countryCode, postalCode, stateCode;
+  presentActivity(rawActivity: IUspsActivity): IActivity {
+    let countryCode: string, postalCode: string, stateCode: string;
     if (rawActivity == null) {
       return;
     }
-    let activity = null;
-    const city =
-      rawActivity.EventCity != null ? rawActivity.EventCity[0] : undefined;
+    let activity: IActivity = null;
+    const city = rawActivity.EventCity != null ? rawActivity.EventCity[0] : undefined;
     if (rawActivity?.EventState?.[0]?.length) {
       stateCode = rawActivity?.EventState?.[0] || undefined;
     }
     if (rawActivity?.EventZIPCode?.[0]?.length) {
-      postalCode =
-        rawActivity.EventZIPCode != null
-          ? rawActivity.EventZIPCode[0]
-          : undefined;
+      postalCode = rawActivity.EventZIPCode != null ? rawActivity.EventZIPCode[0] : undefined;
     }
     if (rawActivity?.EventCountry?.[0]?.length) {
-      countryCode =
-        rawActivity.EventCountry != null
-          ? rawActivity.EventCountry[0]
-          : undefined;
+      countryCode = rawActivity.EventCountry != null ? rawActivity.EventCountry[0] : undefined;
     }
     const location = this.presentLocation({
       city,
@@ -237,10 +229,7 @@ class UspsClient extends ShipperClient {
       countryCode,
       postalCode,
     });
-    const timestamp = this.presentTimestamp(
-      rawActivity?.EventDate?.[0],
-      rawActivity?.EventTime?.[0]
-    );
+    const timestamp = this.presentTimestamp(rawActivity?.EventDate?.[0], rawActivity?.EventTime?.[0]);
     const details = rawActivity?.Event?.[0];
     if (details != null && timestamp != null) {
       activity = { timestamp, location, details };
@@ -248,15 +237,13 @@ class UspsClient extends ShipperClient {
     return activity;
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment: IUspsShipment): IActivitiesAndStatus {
     const activities = [];
     const trackSummary = this.presentActivity(shipment?.TrackSummary?.[0]);
     if (trackSummary != null) {
       activities.push(trackSummary);
     }
-    for (const rawActivity of Array.from(
-      (shipment != null ? shipment.TrackDetail : undefined) || []
-    )) {
+    for (const rawActivity of Array.from((shipment != null ? shipment.TrackDetail : undefined) || [])) {
       const activity = this.presentActivity(rawActivity);
       if (activity != null) {
         activities.push(activity);
@@ -265,12 +252,12 @@ class UspsClient extends ShipperClient {
     return { activities, status: this.getStatus(shipment) };
   }
 
-  requestOptions({ trackingNumber, clientIp, test }) {
+  requestOptions({ trackingNumber, clientIp, test }: IUspsRequestOptions): AxiosRequestConfig {
     const endpoint = test ? "ShippingAPITest.dll" : "ShippingAPI.dll";
     const xml = this.generateRequest(trackingNumber, clientIp);
     return {
       method: "GET",
-      uri: `http://production.shippingapis.com/${endpoint}?API=TrackV2&XML=${xml}`,
+      url: `http://production.shippingapis.com/${endpoint}?API=TrackV2&XML=${xml}`,
     };
   }
 }

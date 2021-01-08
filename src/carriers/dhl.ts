@@ -1,45 +1,55 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-/* eslint-disable
-    constructor-super,
-    no-constant-condition,
-    no-eval,
-    no-this-before-super,
-    no-unused-vars
-*/
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { Parser } from "xml2js";
 import {
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
+  IActivitiesAndStatus,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
-} from "./shipper";
+  TrackitClient,
+} from "../trackitClient";
 
-interface IDhlClientOptions extends IShipperClientOptions {
+interface IDhlClientOptions extends ITrackitClientOptions {
   userId: string;
   password: string;
 }
 
-class DhlClient extends ShipperClient {
+interface IDhlRawActivity {
+  Date: string[];
+  Time: string[];
+  ServiceEvent: {
+    Description: string[];
+    EventCode: string[];
+  }[];
+  ServiceArea: {
+    Description: string[];
+  }[];
+}
+
+interface IDhlShipment {
+  EstDlvyDate: string[];
+  Weight: string[];
+  ShipmentEvent: IDhlRawActivity[];
+  DestinationServiceArea: {
+    Description: string[];
+  }[];
+}
+
+export interface IDhlRequestOptions extends ITrackitRequestOptions {
+  trackingNumber: string;
+}
+
+interface IDhlResponse {
+  "req:TrackingResponse": {
+    AWBInfo: {
+      ShipmentInfo: IDhlShipment[];
+      Status: { ActionStatus: string }[];
+    }[];
+  };
+}
+
+class DhlClient extends TrackitClient<IDhlShipment, IDhlRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["AD", STATUS_TYPES.EN_ROUTE],
     ["AF", STATUS_TYPES.EN_ROUTE],
@@ -97,12 +107,10 @@ class DhlClient extends ShipperClient {
 
   constructor(options: IDhlClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
   }
 
-  generateRequest(trk) {
+  generateRequest(trk: string): string {
     return `\
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <req:KnownTrackingRequest xmlns:req="http://www.dhl.com">
@@ -119,10 +127,10 @@ class DhlClient extends ShipperClient {
 `;
   }
 
-  async validateResponse(response: any): Promise<IShipperResponse> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IDhlShipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
+      const trackResult = await new Promise<IDhlResponse>((resolve, reject) => {
         this.parser.parseString(response, (xmlErr, trackResult) => {
           if (xmlErr) {
             reject(xmlErr);
@@ -140,52 +148,45 @@ class DhlClient extends ShipperClient {
       if (trackingResponse == null) {
         return { err: new Error("no tracking response") };
       }
-      const awbInfo =
-        trackingResponse.AWBInfo != null
-          ? trackingResponse.AWBInfo[0]
-          : undefined;
+      const awbInfo = trackingResponse.AWBInfo != null ? trackingResponse.AWBInfo[0] : undefined;
       if (awbInfo == null) {
         return { err: new Error("no AWBInfo in response") };
       }
-      const shipment =
-        awbInfo.ShipmentInfo != null ? awbInfo.ShipmentInfo[0] : undefined;
+      const shipment = awbInfo.ShipmentInfo != null ? awbInfo.ShipmentInfo[0] : undefined;
       if (shipment == null) {
         return { err: new Error("could not find shipment") };
       }
-      const trackStatus =
-        awbInfo.Status != null ? awbInfo.Status[0] : undefined;
-      const statusCode =
-        trackStatus != null ? trackStatus.ActionStatus : undefined;
+      const trackStatus = awbInfo.Status != null ? awbInfo.Status[0] : undefined;
+      const statusCode = trackStatus != null ? trackStatus.ActionStatus : undefined;
       if (statusCode.toString() !== "success") {
         return { err: new Error(`unexpected track status code=${statusCode}`) };
       }
       return { shipment: shipment };
     } catch (e) {
-      return { err: e };
+      return { err: new Error(e) };
     }
   }
 
-  getEta(shipment) {
-    const eta =
-      shipment.EstDlvyDate != null ? shipment.EstDlvyDate[0] : undefined;
+  getEta(shipment: IDhlShipment): Date {
+    const eta = shipment.EstDlvyDate != null ? shipment.EstDlvyDate[0] : undefined;
     const formatSpec = "YYYYMMDD HHmmss ZZ";
     if (eta != null) {
       return moment(eta, formatSpec).toDate();
     }
   }
 
-  getService(shipment) {
+  getService(_: IDhlShipment): undefined {
     return undefined;
   }
 
-  getWeight(shipment) {
+  getWeight(shipment: IDhlShipment): string {
     const weight = shipment.Weight != null ? shipment.Weight[0] : undefined;
     if (weight != null) {
       return `${weight} LB`;
     }
   }
 
-  presentTimestamp(dateString, timeString) {
+  presentTimestamp(dateString: string, timeString: string): Date {
     if (dateString == null) {
       return;
     }
@@ -197,8 +198,8 @@ class DhlClient extends ShipperClient {
     return moment(inputString, formatSpec).toDate();
   }
 
-  presentAddress(rawAddress: string) {
-    let city, countryCode, stateCode;
+  presentAddress(rawAddress: string): string {
+    let city: string, countryCode: string, stateCode: string;
     if (rawAddress == null) {
       return;
     }
@@ -225,7 +226,7 @@ class DhlClient extends ShipperClient {
     });
   }
 
-  presentDetails(rawAddress, rawDetails) {
+  presentDetails(rawAddress: string, rawDetails: string): string {
     if (rawDetails == null) {
       return;
     }
@@ -238,14 +239,14 @@ class DhlClient extends ShipperClient {
       .replace(new RegExp(`(?: at| in)? ${rawAddress.trim()}$`), "");
   }
 
-  presentStatus(status) {
+  presentStatus(status: string): STATUS_TYPES {
     return this.STATUS_MAP.get(status) || STATUS_TYPES.UNKNOWN;
   }
 
-  getActivitiesAndStatus(shipment) {
+  getActivitiesAndStatus(shipment: IDhlShipment): IActivitiesAndStatus {
     const activities = [];
-    let status = null;
-    let rawActivities: any[] = shipment.ShipmentEvent;
+    let status = STATUS_TYPES.UNKNOWN;
+    let rawActivities: IDhlRawActivity[] = shipment.ShipmentEvent;
     if (rawActivities == null) {
       rawActivities = [];
     }
@@ -257,28 +258,20 @@ class DhlClient extends ShipperClient {
         rawActivity.Date != null ? rawActivity.Date[0] : undefined,
         rawActivity.Time != null ? rawActivity.Time[0] : undefined
       );
-      let details = this.presentDetails(
-        rawLocation,
-        rawActivity?.ServiceEvent?.[0]?.Description?.[0]
-      );
+      let details = this.presentDetails(rawLocation, rawActivity?.ServiceEvent?.[0]?.Description?.[0]);
       if (details != null && timestamp != null) {
-        details =
-          details.slice(-1) === "."
-            ? details.slice(0, +-2 + 1 || undefined)
-            : details;
+        details = details.slice(-1) === "." ? details.slice(0, +-2 + 1 || undefined) : details;
         const activity = { timestamp, location, details };
         activities.push(activity);
       }
       if (!status) {
-        status = this.presentStatus(
-          rawActivity?.ServiceEvent?.[0]?.EventCode?.[0]
-        );
+        status = this.presentStatus(rawActivity?.ServiceEvent?.[0]?.EventCode?.[0]);
       }
     }
     return { activities, status };
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IDhlShipment): string {
     const destination = shipment?.DestinationServiceArea?.[0]?.Description?.[0];
     if (destination == null) {
       return;
@@ -286,11 +279,12 @@ class DhlClient extends ShipperClient {
     return this.presentAddress(destination);
   }
 
-  requestOptions({ trackingNumber }) {
+  requestOptions(options: IDhlRequestOptions): AxiosRequestConfig {
+    const { trackingNumber } = options;
     return {
       method: "POST",
-      uri: "http://xmlpi-ea.dhl.com/XMLShippingServlet",
-      body: this.generateRequest(trackingNumber),
+      url: "http://xmlpi-ea.dhl.com/XMLShippingServlet",
+      data: this.generateRequest(trackingNumber),
     };
   }
 }

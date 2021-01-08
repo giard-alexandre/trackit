@@ -1,28 +1,57 @@
-/* eslint-disable
-	@typescript-eslint/restrict-template-expressions,
-	@typescript-eslint/no-unsafe-member-access,
-	@typescript-eslint/no-unsafe-assignment,
-	@typescript-eslint/no-unsafe-return,
-	@typescript-eslint/no-unsafe-call,
-	node/no-callback-literal
-*/
+import { AxiosRequestConfig } from "axios";
 import moment from "moment-timezone";
-// TODO: This file was created by bulk-decaffeinate.
-// Fix any style issues and re-enable lint.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { Parser } from "xml2js";
 import {
-  IShipperClientOptions,
-  IShipperResponse,
-  ShipperClient,
+  IActivitiesAndStatus,
+  IActivity,
+  ICarrierResponse,
+  ITrackitClientOptions,
+  ITrackitRequestOptions,
   STATUS_TYPES,
-} from "./shipper";
+  TrackitClient,
+} from "../trackitClient";
 
-class A1Client extends ShipperClient {
+interface IA1Address {
+  City: string[];
+  StateProvince: string[];
+  CountryCode: string[];
+  PostalCode: string[];
+}
+
+interface ITrackingEventDetail {
+  EventCode: string[];
+  EstimatedDeliveryDate: string[];
+  EventLocation: IA1Address[];
+  EventDateTime: string[];
+  EventCodeDesc: string[];
+}
+
+interface ITrackingEventHistory {
+  TrackingEventDetail: ITrackingEventDetail[];
+}
+
+interface IA1Shipment {
+  TrackingEventHistory: ITrackingEventHistory[];
+  PackageDestinationLocation: IA1Address[];
+  TrackingNumber: string;
+}
+
+export interface IA1RequestOptions extends ITrackitRequestOptions {
+  trackingNumber: string;
+}
+
+interface IA1TrackResult {
+  AmazonTrackingResponse: {
+    PackageTrackingInfo: IA1Shipment[];
+    TrackingErrorInfo: {
+      TrackingErrorDetail: {
+        ErrorDetailCodeDesc: string[];
+      }[];
+    }[];
+  };
+}
+
+class A1Client extends TrackitClient<IA1Shipment, IA1RequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["101", STATUS_TYPES.EN_ROUTE],
     ["102", STATUS_TYPES.EN_ROUTE],
@@ -33,17 +62,15 @@ class A1Client extends ShipperClient {
 
   parser: Parser;
 
-  constructor(options: IShipperClientOptions) {
+  constructor(options: ITrackitClientOptions) {
     super(options);
-    // Todo: Check if this works
-    // this.options = options;
     this.parser = new Parser();
   }
 
-  async validateResponse(response): Promise<IShipperResponse> {
+  async validateResponse(response: string): Promise<ICarrierResponse<IA1Shipment>> {
     this.parser.reset();
     try {
-      const trackResult = await new Promise<any>((resolve, reject) => {
+      const trackResult = await new Promise<IA1TrackResult>((resolve, reject) => {
         this.parser.parseString(response, (xmlErr, trackResult) => {
           if (xmlErr) {
             reject(xmlErr);
@@ -56,25 +83,23 @@ class A1Client extends ShipperClient {
       if (trackResult == null) {
         return { err: new Error("TrackResult is empty") };
       }
-      const trackingInfo =
-        trackResult?.AmazonTrackingResponse?.PackageTrackingInfo?.[0];
+      const trackingInfo = trackResult?.AmazonTrackingResponse?.PackageTrackingInfo?.[0];
       if (trackingInfo?.TrackingNumber == null) {
-        const errorInfo =
-          trackResult?.AmazonTrackingResponse?.TrackingErrorInfo?.[0];
         const error =
-          errorInfo?.TrackingErrorDetail?.[0]?.ErrorDetailCodeDesc?.[0];
+          trackResult?.AmazonTrackingResponse?.TrackingErrorInfo?.[0]?.TrackingErrorDetail?.[0]
+            ?.ErrorDetailCodeDesc?.[0];
         if (error != null) {
-          return { err: error };
+          return { err: new Error(error) };
         }
         return { err: new Error("unknown error") };
       }
       return { shipment: trackingInfo };
     } catch (e) {
-      return { err: e };
+      return { err: new Error(e) };
     }
   }
 
-  presentAddress(address) {
+  presentAddress(address: IA1Address): string {
     if (address == null) {
       return;
     }
@@ -90,14 +115,14 @@ class A1Client extends ShipperClient {
     });
   }
 
-  getStatus(shipment) {
-    const lastActivity =
-      shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail?.[0];
+  getStatus(shipment: IA1Shipment): STATUS_TYPES {
+    const lastActivity = shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail?.[0];
     const statusCode = lastActivity?.EventCode?.[0];
     if (statusCode == null) {
       return;
     }
-    const code = statusCode.match(/EVENT_(.*)$/)?.[1];
+    const eventPattern = /EVENT_(.*)$/;
+    const code = +eventPattern.exec(statusCode)?.[1];
     if (isNaN(code)) {
       return;
     }
@@ -112,14 +137,13 @@ class A1Client extends ShipperClient {
     }
   }
 
-  getActivitiesAndStatus(shipment) {
-    const activities = [];
+  getActivitiesAndStatus(shipment: IA1Shipment): IActivitiesAndStatus {
+    const activities: Array<IActivity> = [];
     const status = this.getStatus(shipment);
-    let rawActivities: any[] =
-      shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail;
+    let rawActivities: ITrackingEventDetail[] = shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail;
     rawActivities = rawActivities ?? [];
     for (const rawActivity of rawActivities) {
-      let datetime, timestamp;
+      let datetime: string, timestamp: Date;
       const location = this.presentAddress(rawActivity?.EventLocation?.[0]);
       const rawTimestamp = rawActivity?.EventDateTime?.[0];
       if (rawTimestamp != null) {
@@ -137,34 +161,32 @@ class A1Client extends ShipperClient {
     return { activities, status };
   }
 
-  getEta(shipment) {
-    const activities =
-      shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail || [];
+  getEta(shipment: IA1Shipment): Date {
+    const activities = shipment?.TrackingEventHistory?.[0]?.TrackingEventDetail || [];
     const firstActivity = activities[activities.length - 1];
     if (firstActivity?.EstimatedDeliveryDate?.[0] == null) {
       return;
     }
-    return moment(
-      `${firstActivity?.EstimatedDeliveryDate?.[0]}T00:00:00Z`
-    ).toDate();
+    return moment(`${firstActivity?.EstimatedDeliveryDate?.[0]}T00:00:00Z`).toDate();
   }
 
-  getService(shipment) {
+  getService(_: IA1Shipment): null {
     return null;
   }
 
-  getWeight(shipment) {
+  getWeight(_: IA1Shipment): null {
     return null;
   }
 
-  getDestination(shipment) {
+  getDestination(shipment: IA1Shipment): string {
     return this.presentAddress(shipment?.PackageDestinationLocation?.[0]);
   }
 
-  requestOptions({ trackingNumber }) {
+  public requestOptions(options: IA1RequestOptions): AxiosRequestConfig {
+    const { trackingNumber } = options;
     return {
+      url: `http://www.aoneonline.com/pages/customers/trackingrequest.php?tracking_number=${trackingNumber}`,
       method: "GET",
-      uri: `http://www.aoneonline.com/pages/customers/trackingrequest.php?tracking_number=${trackingNumber}`,
     };
   }
 }
