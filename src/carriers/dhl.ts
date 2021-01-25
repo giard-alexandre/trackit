@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios";
-import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
@@ -169,9 +168,8 @@ class DhlClient extends TrackitClient<IDhlShipment, IDhlRequestOptions> {
 
   getEta(shipment: IDhlShipment): Date {
     const eta = shipment.EstDlvyDate != null ? shipment.EstDlvyDate[0] : undefined;
-    const formatSpec = "YYYYMMDD HHmmss ZZ";
     if (eta != null) {
-      return moment(eta, formatSpec).toDate();
+      return new Date(eta);
     }
   }
 
@@ -194,8 +192,7 @@ class DhlClient extends TrackitClient<IDhlShipment, IDhlRequestOptions> {
       timeString = "00:00";
     }
     const inputString = `${dateString} ${timeString} +0000`;
-    const formatSpec = "YYYYMMDD HHmmss ZZ";
-    return moment(inputString, formatSpec).toDate();
+    return new Date(inputString);
   }
 
   presentAddress(rawAddress: string): string {
