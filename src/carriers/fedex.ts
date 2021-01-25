@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios";
-import moment from "moment-timezone";
 import { Builder, Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
@@ -226,8 +225,7 @@ export class FedexClient extends TrackitClient<IFedexShipment, IFedexRequestOpti
       const location = this.presentAddress(rawActivity.Address != null ? rawActivity.Address[0] : undefined);
       const rawTimestamp = rawActivity.Timestamp != null ? rawActivity.Timestamp[0] : undefined;
       if (rawTimestamp != null) {
-        const eventTime = moment(rawTimestamp);
-        timestamp = eventTime.toDate();
+        timestamp = new Date(rawTimestamp);
         datetime = rawTimestamp.slice(0, 19);
       }
       const details = rawActivity.EventDescription != null ? rawActivity.EventDescription[0] : undefined;
@@ -244,7 +242,7 @@ export class FedexClient extends TrackitClient<IFedexShipment, IFedexRequestOpti
     if (ts == null) {
       return;
     }
-    return moment(`${ts.slice(0, 19)}Z`).toDate();
+    return new Date(ts);
   }
 
   getService(shipment: IFedexShipment): string {

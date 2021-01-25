@@ -175,7 +175,7 @@ export abstract class TrackitClient<TShipment, TRequestOptions extends ITrackitR
     }
     const { activities, status } = this.getActivitiesAndStatus(shipment);
     const eta = this.getEta(shipment);
-    if (eta && startOfDay(eta) === eta) {
+    if (eta && startOfDay(eta).getTime() === eta.getTime()) {
       adjustedEta = endOfDay(eta);
     }
     if (adjustedEta === null) {
