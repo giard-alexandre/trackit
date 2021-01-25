@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios";
-import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
@@ -147,8 +146,7 @@ class A1Client extends TrackitClient<IA1Shipment, IA1RequestOptions> {
       const location = this.presentAddress(rawActivity?.EventLocation?.[0]);
       const rawTimestamp = rawActivity?.EventDateTime?.[0];
       if (rawTimestamp != null) {
-        const eventTime = moment(rawTimestamp);
-        timestamp = eventTime.toDate();
+        timestamp = new Date(rawTimestamp);
         datetime = rawTimestamp.slice(0, 19);
       }
       const details = rawActivity?.EventCodeDesc?.[0];
@@ -167,7 +165,7 @@ class A1Client extends TrackitClient<IA1Shipment, IA1RequestOptions> {
     if (firstActivity?.EstimatedDeliveryDate?.[0] == null) {
       return;
     }
-    return moment(`${firstActivity?.EstimatedDeliveryDate?.[0]}T00:00:00Z`).toDate();
+    return new Date(`${firstActivity?.EstimatedDeliveryDate?.[0]}T00:00:00Z`);
   }
 
   getService(_: IA1Shipment): null {
