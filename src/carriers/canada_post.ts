@@ -134,7 +134,7 @@ class CanadaPostClient extends TrackitClient<ICanadaPostShipment, ICanadaPostReq
       const timestampString = `${event["event-date"] != null ? event["event-date"][0] : undefined}T${
         event["event-time"] != null ? event["event-time"][0] : undefined
       }Z`;
-      const timestamp = moment(timestampString).toDate();
+      const timestamp = new Date(timestampString);
       const details = event["event-description"] != null ? event["event-description"][0] : undefined;
       if (details != null && timestamp != null) {
         const activity: IActivity = {
@@ -159,7 +159,7 @@ class CanadaPostClient extends TrackitClient<ICanadaPostShipment, ICanadaPostReq
       return;
     }
     if (ts != null ? ts.length : undefined) {
-      return moment(`${ts}T00:00:00Z`).toDate();
+      return new Date(`${ts}T00:00:00Z`);
     }
   }
 
