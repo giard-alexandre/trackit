@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios";
-import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
