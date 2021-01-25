@@ -1,3 +1,4 @@
+import { endOfDay } from "date-fns";
 import fs from "fs";
 import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 import { IUpsmiRequestOptions, UpsMiClient } from "../src/carriers/upsmi";
@@ -40,7 +41,7 @@ describe("ups mi client", () => {
 
       it("has a status of delivered", () => expect(_package.status).toBe(STATUS_TYPES.DELIVERED));
 
-      it("has an eta of Mar 25 2014", () => expect(_package.eta).toEqual(new Date("Mar 25 2014")));
+      it("has an eta of Mar 25 2014", () => expect(_package.eta).toEqual(endOfDay(new Date("Mar 25 2014"))));
 
       it("has a weight of 0.3050 lbs.", () => expect(_package.weight).toBe("0.3050 lbs."));
 

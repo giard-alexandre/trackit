@@ -1,13 +1,13 @@
 import { AxiosRequestConfig } from "axios";
 import cheerio, { load } from "cheerio";
-import moment from "moment-timezone";
+import { isValid } from "date-fns";
 import {
   IActivitiesAndStatus,
   IActivity,
-  ITrackitRequestOptions,
   ICarrierResponse,
-  TrackitClient,
+  ITrackitRequestOptions,
   STATUS_TYPES,
+  TrackitClient,
 } from "../trackitClient";
 
 interface IUpsmiShipment {
@@ -25,7 +25,7 @@ class UpsMiClient extends TrackitClient<IUpsmiShipment, IUpsmiRequestOptions> {
   private STATUS_MAP = new Map<string, STATUS_TYPES>([
     ["post office entry", STATUS_TYPES.EN_ROUTE],
     ["out for post office delivery", STATUS_TYPES.OUT_FOR_DELIVERY],
-    ["shipment information received", STATUS_TYPES.SHIPPING], // This has to stay first so as to overrice the `['received', STATUS_TYPES.EN_ROUTE]` status
+    ["shipment information received", STATUS_TYPES.SHIPPING], // This has to stay before 'received' so as to overrice the `['received', STATUS_TYPES.EN_ROUTE]` status
     ["delivered", STATUS_TYPES.DELIVERED],
     ["transferred", STATUS_TYPES.EN_ROUTE],
     ["received", STATUS_TYPES.EN_ROUTE],
@@ -76,13 +76,13 @@ class UpsMiClient extends TrackitClient<IUpsmiShipment, IUpsmiRequestOptions> {
   }
 
   getEta(data: IUpsmiShipment): Date {
-    let formattedEta: moment.Moment;
+    let formattedEta: Date;
     const eta = this.extractSummaryField(data, "Projected Delivery Date");
     if (eta != null) {
-      formattedEta = moment(new Date(eta));
+      formattedEta = new Date(eta);
     }
-    if (formattedEta != null ? formattedEta.isValid() : undefined) {
-      return formattedEta.toDate();
+    if (formattedEta && isValid(formattedEta)) {
+      return formattedEta;
     } else {
       return undefined;
     }
