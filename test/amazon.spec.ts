@@ -1,6 +1,5 @@
 import { addDays, getDate, getYear, set, setDay } from "date-fns";
 import fs from "fs";
-import moment from "moment-timezone";
 import { AmazonClient, IAmazonRequestOptions } from "../src/carriers/amazon";
 import { IActivity, ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
@@ -101,7 +100,7 @@ describe("amazon client", () => {
         beforeAll(() => (_activity = _package.activities[0]));
 
         it("with a timestamp", () =>
-          expect(_activity.timestamp).toEqual(new Date(`${moment().year()}-10-16T07:13:00Z`)));
+          expect(_activity.timestamp).toEqual(new Date(`${new Date().getFullYear()}-10-16T07:13:00Z`)));
 
         it("with details", () => expect(_activity.details).toBe("Shipment arrived at Amazon facility"));
 
@@ -114,7 +113,7 @@ describe("amazon client", () => {
         beforeAll(() => (_activity = _package.activities[1]));
 
         it("with a timestamp", () =>
-          expect(_activity.timestamp).toEqual(new Date(`${moment().year()}-10-15T00:00:00Z`)));
+          expect(_activity.timestamp).toEqual(new Date(`${new Date().getFullYear()}-10-15T00:00:00Z`)));
 
         it("with details", () =>
           expect(_activity.details).toBe("Package has left seller facility and is in transit to carrier"));
