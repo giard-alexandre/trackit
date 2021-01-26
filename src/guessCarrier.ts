@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/prefer-regexp-exec */
-import { upperCase } from "change-case";
 import { CheckDigit } from "./checkdigit";
 
 function _preprocess(trk: string): string {
-  return upperCase(trk.replace(/\s+/g, ""));
+  return trk.replace(/\s+/g, "").toUpperCase();
 }
 
 function _confirmUps(trk: string): boolean[] {
@@ -143,63 +142,132 @@ function _confirmA1International(trk: string): boolean[] {
   return [false, false];
 }
 
+export enum Carrier {
+  UNKNOWN,
+  UPS,
+  AMAZON,
+  FEDEX,
+  USPS,
+  UPSMI,
+  DHLGM,
+  CANADA_POST,
+  LASERSHIP,
+  ONTRAC,
+  PRESTIGE,
+  A1INTL,
+}
+
 interface ICarrierMatcher {
-  name: string;
+  carrier?: Carrier;
   regex: RegExp;
   confirm?: (trk: string) => boolean[];
 }
 
-// TODO: Add carrier name enums
 const CARRIERS: ICarrierMatcher[] = [
-  { name: "ups", regex: /^1Z[0-9A-Z]{16}$/, confirm: _confirmUps },
   {
-    name: "ups",
+    carrier: Carrier.UPS,
+    regex: /^1Z[0-9A-Z]{16}$/,
+    confirm: _confirmUps,
+  },
+  {
+    carrier: Carrier.UPS,
     regex: /^([HTJKFWMQA])\d{10}$/,
     confirm: _confirmUpsFreight,
   },
-  { name: "amazon", regex: /^1\d{2}-\d{7}-\d{7}:\d{13}$/ },
-  { name: "fedex", regex: /^\d{12}$/, confirm: _confirmFedex12 },
-  { name: "fedex", regex: /^\d{15}$/, confirm: _confirmFedex15 },
-  { name: "fedex", regex: /^\d{20}$/, confirm: _confirmFedex20 },
-  { name: "usps", regex: /^\d{20}$/, confirm: _confirmUsps20 },
-  { name: "usps", regex: /^02\d{18}$/, confirm: _confirmFedexSmartPost },
-  { name: "fedex", regex: /^02\d{18}$/, confirm: _confirmFedexSmartPost },
-  { name: "fedex", regex: /^DT\d{12}$/, confirm: _confirmFedexDoorTag },
-  { name: "fedex", regex: /^927489\d{16}$/ },
-  { name: "fedex", regex: /^926129\d{16}$/ },
-  { name: "upsmi", regex: /^927489\d{16}$/ },
-  { name: "upsmi", regex: /^926129\d{16}$/ },
-  { name: "upsmi", regex: /^927489\d{20}$/ },
-  { name: "fedex", regex: /^96\d{20}$/, confirm: _confirmFedex9622 },
-  { name: "usps", regex: /^927489\d{16}$/ },
-  { name: "usps", regex: /^926129\d{16}$/ },
-  { name: "fedex", regex: /^7489\d{16}$/ },
-  { name: "fedex", regex: /^6129\d{16}$/ },
   {
-    name: "usps",
+    carrier: Carrier.AMAZON,
+    regex: /^1\d{2}-\d{7}-\d{7}:\d{13}$/,
+  },
+  {
+    carrier: Carrier.FEDEX,
+    regex: /^\d{12}$/,
+    confirm: _confirmFedex12,
+  },
+  {
+    carrier: Carrier.FEDEX,
+    regex: /^\d{15}$/,
+    confirm: _confirmFedex15,
+  },
+  {
+    carrier: Carrier.FEDEX,
+    regex: /^\d{20}$/,
+    confirm: _confirmFedex20,
+  },
+  {
+    carrier: Carrier.USPS,
+    regex: /^\d{20}$/,
+    confirm: _confirmUsps20,
+  },
+  {
+    carrier: Carrier.USPS,
+    regex: /^02\d{18}$/,
+    confirm: _confirmFedexSmartPost,
+  },
+  {
+    carrier: Carrier.FEDEX,
+    regex: /^02\d{18}$/,
+    confirm: _confirmFedexSmartPost,
+  },
+  {
+    carrier: Carrier.FEDEX,
+    regex: /^DT\d{12}$/,
+    confirm: _confirmFedexDoorTag,
+  },
+  { carrier: Carrier.FEDEX, regex: /^927489\d{16}$/ },
+  { carrier: Carrier.FEDEX, regex: /^926129\d{16}$/ },
+  { carrier: Carrier.UPSMI, regex: /^927489\d{16}$/ },
+  { carrier: Carrier.UPSMI, regex: /^926129\d{16}$/ },
+  { carrier: Carrier.UPSMI, regex: /^927489\d{20}$/ },
+  { carrier: Carrier.FEDEX, regex: /^96\d{20}$/, confirm: _confirmFedex9622 },
+  { carrier: Carrier.USPS, regex: /^927489\d{16}$/ },
+  { carrier: Carrier.USPS, regex: /^926129\d{16}$/ },
+  { carrier: Carrier.FEDEX, regex: /^7489\d{16}$/ },
+  { carrier: Carrier.FEDEX, regex: /^6129\d{16}$/ },
+  {
+    carrier: Carrier.USPS,
     regex: /^(91|92|93|94|95|96)\d{20}$/,
     confirm: _confirmUsps22,
   },
-  { name: "usps", regex: /^\d{26}$/, confirm: _confirmUsps26 },
-  { name: "usps", regex: /^420\d{27}$/, confirm: _confirmUsps420Zip },
-  { name: "usps", regex: /^420\d{31}$/, confirm: _confirmUsps420ZipPlus4 },
-  { name: "dhlgm", regex: /^420\d{27}$/, confirm: _confirmUsps420Zip },
-  { name: "dhlgm", regex: /^420\d{31}$/, confirm: _confirmUsps420ZipPlus4 },
-  { name: "dhlgm", regex: /^94748\d{17}$/, confirm: _confirmUsps22 },
-  { name: "dhlgm", regex: /^93612\d{17}$/, confirm: _confirmUsps22 },
-  { name: "dhlgm", regex: /^GM\d{16}/ },
-  { name: "usps", regex: /^[A-Z]{2}\d{9}[A-Z]{2}$/ },
-  { name: "canadapost", regex: /^\d{16}$/, confirm: _confirmCanadaPost16 },
-  { name: "lasership", regex: /^L[A-Z]\d{8}$/ },
-  { name: "lasership", regex: /^1LS\d{12}/ },
-  { name: "lasership", regex: /^Q\d{8}[A-Z]/ },
-  { name: "ontrac", regex: /^(C|D)\d{14}$/ },
-  { name: "prestige", regex: /^P[A-Z]{1}\d{8}/ },
-  { name: "a1intl", regex: /^AZ.\d+/, confirm: _confirmA1International },
+  { carrier: Carrier.USPS, regex: /^\d{26}$/, confirm: _confirmUsps26 },
+  { carrier: Carrier.USPS, regex: /^420\d{27}$/, confirm: _confirmUsps420Zip },
+  {
+    carrier: Carrier.USPS,
+    regex: /^420\d{31}$/,
+    confirm: _confirmUsps420ZipPlus4,
+  },
+  {
+    carrier: Carrier.DHLGM,
+    regex: /^420\d{27}$/,
+    confirm: _confirmUsps420Zip,
+  },
+  {
+    carrier: Carrier.DHLGM,
+    regex: /^420\d{31}$/,
+    confirm: _confirmUsps420ZipPlus4,
+  },
+  { carrier: Carrier.DHLGM, regex: /^94748\d{17}$/, confirm: _confirmUsps22 },
+  { carrier: Carrier.DHLGM, regex: /^93612\d{17}$/, confirm: _confirmUsps22 },
+  { carrier: Carrier.DHLGM, regex: /^GM\d{16}/ },
+  { carrier: Carrier.USPS, regex: /^[A-Z]{2}\d{9}[A-Z]{2}$/ },
+  {
+    carrier: Carrier.CANADA_POST,
+    regex: /^\d{16}$/,
+    confirm: _confirmCanadaPost16,
+  },
+  { carrier: Carrier.LASERSHIP, regex: /^L[A-Z]\d{8}$/ },
+  { carrier: Carrier.LASERSHIP, regex: /^1LS\d{12}/ },
+  { carrier: Carrier.LASERSHIP, regex: /^Q\d{8}[A-Z]/ },
+  { carrier: Carrier.ONTRAC, regex: /^(C|D)\d{14}$/ },
+  { carrier: Carrier.PRESTIGE, regex: /^P[A-Z]{1}\d{8}/ },
+  {
+    carrier: Carrier.A1INTL,
+    regex: /^AZ.\d+/,
+    confirm: _confirmA1International,
+  },
 ];
 
-export default (trk: string): string[] => {
-  const carriers: string[] = [];
+export const guessCarrier = (trk: string): Carrier[] => {
+  const carriers: Carrier[] = [];
   trk = _preprocess(trk);
 
   CARRIERS.every((c) => {
@@ -207,11 +275,11 @@ export default (trk: string): string[] => {
       if (c.confirm != null) {
         const [good, stop] = Array.from(c.confirm(trk));
         if (good) {
-          carriers.push(c.name);
+          carriers.push(c.carrier);
         }
         return !stop;
       }
-      carriers.push(c.name);
+      carriers.push(c.carrier);
       return true;
     }
     return true;
