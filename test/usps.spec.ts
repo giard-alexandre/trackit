@@ -1,8 +1,7 @@
 import fs from "fs";
-import moment from "moment-timezone";
 import { Parser } from "xml2js";
-import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 import { IUspsRequestOptions, UspsClient } from "../src/carriers/usps";
+import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
 const handleError = (e: unknown) => {
   if (e) {
@@ -172,8 +171,7 @@ describe("usps client", () => {
         })
       );
 
-      it("has an eta of September 25th", () =>
-        expect(_package.eta).toEqual(moment("2015-09-25T00:00:00.000Z").toDate()));
+      it("has an eta of September 25th", () => expect(_package.eta).toEqual(new Date("2015-09-25T00:00:00.000Z")));
     });
   });
 });
