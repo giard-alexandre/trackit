@@ -1,7 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { upperCaseFirst } from "change-case";
 import { load } from "cheerio";
-import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
@@ -99,7 +98,7 @@ class DhlGmClient extends TrackitClient<IDhlgmShipment, IDhlgmRequestOptions> {
     if (!(eta != null ? eta.length : undefined)) {
       return;
     }
-    return moment(new Date(`${eta} 23:59:59 +00:00`)).toDate();
+    return new Date(`${eta} 23:59:59 +00:00`);
   }
 
   getService(data: cheerio.Root): string {
@@ -148,7 +147,7 @@ class DhlGmClient extends TrackitClient<IDhlgmShipment, IDhlgmRequestOptions> {
             currentTime = currentTime?.trim()?.split(" ")?.[0];
           }
           currentTime = currentTime.replace("AM", " AM").replace("PM", " PM");
-          timestamp = moment(new Date(`${currentDate} ${currentTime}`)).toDate();
+          timestamp = new Date(`${currentDate} ${currentTime}`);
         }
         let location = row.find(".timeline-location-responsive").text();
         location = location != null ? location.trim() : undefined;
