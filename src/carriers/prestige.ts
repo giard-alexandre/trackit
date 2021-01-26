@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from "axios";
-import moment from "moment-timezone";
+import { parse } from "date-fns";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
@@ -130,7 +130,7 @@ class PrestigeClient extends TrackitClient<IPrestigeShipment, IPrestigeRequestOp
       return;
     }
     eta = `${eta} 00:00 +00:00`;
-    return moment(eta, "MM/DD/YYYY HH:mm ZZ").toDate();
+    return new Date(eta);
   }
 
   getService(): undefined {
