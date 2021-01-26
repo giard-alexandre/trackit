@@ -1,3 +1,4 @@
+import { endOfDay } from "date-fns";
 import * as fs from "fs";
 import { A1Client, IA1RequestOptions } from "../src/carriers/a1";
 import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
@@ -64,7 +65,7 @@ describe("a1 client", () => {
 
       it("has a destination of Chicago, IL", () => expect(_package.destination).toBe("Chicago, IL 60634"));
 
-      it("has an eta of October 7th", () => expect(_package.eta).toEqual(new Date("2013-10-07T00:00:00.000Z")));
+      it("has an eta of October 7th", () => expect(_package.eta).toEqual(new Date("2013-10-07")));
 
       it("has 5 activities", () => expect(_package.activities).toHaveLength(5));
 

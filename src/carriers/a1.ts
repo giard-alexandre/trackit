@@ -165,7 +165,7 @@ class A1Client extends TrackitClient<IA1Shipment, IA1RequestOptions> {
     if (firstActivity?.EstimatedDeliveryDate?.[0] == null) {
       return;
     }
-    return new Date(`${firstActivity?.EstimatedDeliveryDate?.[0]}T00:00:00Z`);
+    return new Date(`${firstActivity?.EstimatedDeliveryDate?.[0]}`);
   }
 
   getService(_: IA1Shipment): null {
