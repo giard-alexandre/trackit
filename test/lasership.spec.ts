@@ -1,6 +1,5 @@
 import { AxiosRequestConfig } from "axios";
 import fs from "fs";
-import moment from "moment-timezone";
 import { ILasershipRequestOptions, LasershipClient } from "../src/carriers/lasership";
 import { ITrackitResponseData, STATUS_TYPES } from "../src/trackitClient";
 
@@ -99,16 +98,16 @@ describe("lasership client", () => {
 
       it("has a weight of 5.25 lbs", () => expect(_package.weight).toBe("5.25 lbs"));
 
-      it("has an eta of Sep 23rd, 2015", () => expect(_package.eta).toEqual(moment("2015-09-23T00:00:00Z").toDate()));
+      it("has an eta of Sep 23rd, 2015", () => expect(_package.eta).toEqual(new Date("2015-09-23T00:00:00Z")));
 
       it("has two activities with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(2);
         let act = _package.activities[0];
-        expect(act.timestamp).toEqual(moment("2015-09-20T14:42:14Z").toDate());
+        expect(act.timestamp).toEqual(new Date("2015-09-20T14:42:14Z"));
         expect(act.location).toBe("Groveport, OH 43125");
         expect(act.details).toBe("Origin Scan");
         act = _package.activities[1];
-        expect(act.timestamp).toEqual(moment("2015-09-20T00:07:51Z").toDate());
+        expect(act.timestamp).toEqual(new Date("2015-09-20T00:07:51Z"));
         expect(act.location).toBe("US");
         expect(act.details).toBe("Ship Request Received");
       });

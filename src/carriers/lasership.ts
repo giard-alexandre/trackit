@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios";
-import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
@@ -89,7 +88,7 @@ class LasershipClient extends TrackitClient<ILasershipShipment, ILasershipReques
       const location = this.presentAddress(rawActivity);
       const dateTime = rawActivity != null ? rawActivity.DateTime : undefined;
       if (dateTime != null) {
-        timestamp = moment(`${dateTime}Z`).toDate();
+        timestamp = new Date(`${dateTime}Z`);
       }
       const details = rawActivity != null ? rawActivity.EventShortText : undefined;
       if (details != null && timestamp != null) {
@@ -107,7 +106,7 @@ class LasershipClient extends TrackitClient<ILasershipShipment, ILasershipReques
     if ((shipment != null ? shipment.EstimatedDeliveryDate : undefined) == null) {
       return;
     }
-    return moment(`${shipment.EstimatedDeliveryDate}T00:00:00Z`).toDate();
+    return new Date(`${shipment.EstimatedDeliveryDate}T00:00:00Z`);
   }
 
   getService(): undefined {
