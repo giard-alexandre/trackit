@@ -1,7 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
 import { load } from "cheerio";
-import moment from "moment-timezone";
 import {
   IActivitiesAndStatus,
   ICarrierResponse,
@@ -134,7 +133,7 @@ class OnTracClient extends TrackitClient<IOnTracShipment, IOnTracRequestOptions>
       return;
     }
     ts = ts.replace(/AM$/, " AM").replace(/PM$/, " PM");
-    return moment(new Date(`${ts} +0000`)).toDate();
+    return new Date(`${ts} +0000`);
   }
 
   getActivitiesAndStatus(shipment: cheerio.Root): IActivitiesAndStatus {
@@ -147,7 +146,7 @@ class OnTracClient extends TrackitClient<IOnTracShipment, IOnTracRequestOptions>
     $("#trkdetail table table")
       .children("tr")
       .each((rowIndex, row) => {
-        if (!(rowIndex > 0)) {
+        if (rowIndex <= 0) {
           return;
         }
         const fields: string[] = [];
