@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return */
 import bond from "bondjs";
 import * as fs from "fs";
-import moment from "moment-timezone";
 import { Parser } from "xml2js";
 import { STATUS_TYPES } from "../src/trackitClient";
 import { IUpsLocation, IUpsShipment, UpsClient } from "../src/carriers/ups";
@@ -370,12 +369,12 @@ describe("ups client", () => {
 
     it("uses only the date string if time string isn't specified", () => {
       const ts = _upsClient.presentTimestamp("20140704");
-      expect(ts).toEqual(moment("2014-07-04T00:00:00.000Z").toDate());
+      expect(ts).toEqual(new Date("2014-07-04T00:00:00.000Z"));
     });
 
     it("uses the date and time strings when both are available", () => {
       const ts = _upsClient.presentTimestamp("20140704", "142305");
-      expect(ts).toEqual(moment("2014-07-04T14:23:05.000Z").toDate());
+      expect(ts).toEqual(new Date("2014-07-04T14:23:05.000Z"));
     });
   });
 
@@ -509,10 +508,10 @@ describe("ups client", () => {
         expect(_package.activities).toHaveLength(2);
         const act1 = _package.activities[0];
         const act2 = _package.activities[1];
-        expect(act1.timestamp).toEqual(moment("2010-06-10T12:00:00.000Z").toDate());
+        expect(act1.timestamp).toEqual(new Date("2010-06-10T12:00:00.000Z"));
         expect(act1.location).toBe("Anytown, GA 30340");
         expect(act1.details).toBe("Delivered");
-        expect(act2.timestamp).toEqual(moment("2010-06-08T12:00:00.000Z").toDate());
+        expect(act2.timestamp).toEqual(new Date("2010-06-08T12:00:00.000Z"));
         expect(act2.location).toBe("US");
         expect(act2.details).toBe("Billing information received. shipment date pending.");
       });
@@ -541,7 +540,7 @@ describe("ups client", () => {
       it("has one activity with timestamp, location and details", () => {
         expect(_package.activities).toHaveLength(1);
         const act = _package.activities[0];
-        expect(act.timestamp).toEqual(moment("2010-05-05T01:00:00.000Z").toDate());
+        expect(act.timestamp).toEqual(new Date("2010-05-05T01:00:00.000Z"));
         expect(act.location).toBe("Grand Junction Air S, CO");
         expect(act.details).toBe("Origin scan");
       });
@@ -574,7 +573,7 @@ describe("ups client", () => {
         expect(act.location).toBe("Bonn, DE");
         expect(act.details).toBe("Ups internal activity code");
         act = _package.activities[1];
-        expect(act.timestamp).toEqual(moment("2010-08-30T10:32:00.000Z").toDate());
+        expect(act.timestamp).toEqual(new Date("2010-08-30T10:32:00.000Z"));
         expect(act.location).toBe("Bonn, DE");
         expect(act.details).toBe("Adverse weather conditions caused this delay");
       });

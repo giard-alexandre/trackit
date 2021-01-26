@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { lowerCase, titleCase, upperCaseFirst } from "change-case";
-import moment from "moment-timezone";
+import { isValid, parse } from "date-fns";
 import { Builder, Parser } from "xml2js";
 import {
   IActivitiesAndStatus,
@@ -214,10 +214,12 @@ class UpsClient extends TrackitClient<IUpsShipment, IUpsRequestOptions> {
       return;
     }
     if (timeString == null) {
-      timeString = "00:00:00";
+      timeString = "000000";
     }
-    const formatSpec = "YYYYMMDD HHmmss ZZ";
-    return moment(`${dateString} ${timeString} +0000`, formatSpec).toDate();
+    const formatSpec = "yyyyMMdd HHmmss xx";
+    const dateTimeString = `${dateString} ${timeString} +0000`;
+    const date = parse(dateTimeString, formatSpec, new Date());
+    return isValid(date) ? date : null;
   }
 
   presentAddress(rawAddress: IUpsLocation): string {
